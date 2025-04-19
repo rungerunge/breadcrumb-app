@@ -1,4 +1,4 @@
-# This file stores configurations for your Shopify app.
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 name = "SmartBreadcrumbs"
 client_id = "4f80dd60143fed09228c4e2fa9db52bb"
@@ -6,7 +6,7 @@ application_url = "https://breadcrumb-app.onrender.com"
 embedded = true
 
 [access_scopes]
-# Read and modify themes
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 scopes = "read_themes,write_themes,read_products,read_content"
 
 [auth]
@@ -24,4 +24,5 @@ embedded = false
 
 [build]
 automatically_update_urls_on_dev = true
-dev_store_url = "breadcrumb-app.myshopify.com" 
+dev_store_url = "breadcrumb-app.myshopify.com"
+include_config_on_deploy = true

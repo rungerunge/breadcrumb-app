@@ -1,1 +1,35 @@
- 
+{
+  "name": "smart-breadcrumbs",
+  "version": "1.0.0",
+  "description": "Smart breadcrumb navigation for Shopify themes",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "dev": "shopify app dev",
+    "build": "shopify app build",
+    "deploy": "shopify app deploy",
+    "config:push": "shopify app config push",
+    "config:pull": "shopify app config pull",
+    "generate": "shopify app generate",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@shopify/shopify-api": "^7.7.0",
+    "@shopify/shopify-app-express": "^2.2.0",
+    "@shopify/shopify-app-session-storage-sqlite": "^1.2.0",
+    "compression": "^1.7.4",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6"
+  },
+  "devDependencies": {
+    "@shopify/cli": "^3.50.0",
+    "@shopify/app": "^3.50.0",
+    "nodemon": "^3.0.1",
+    "prettier": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+} 

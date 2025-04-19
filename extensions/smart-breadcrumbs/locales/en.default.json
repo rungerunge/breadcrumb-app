@@ -1,0 +1,14 @@
+{
+  "smart_breadcrumbs": {
+    "name": "Smart Breadcrumbs",
+    "settings": {
+      "font_size_label": "Font Size",
+      "margin_top_label": "Margin Top",
+      "margin_bottom_label": "Margin Bottom",
+      "separator_label": "Breadcrumb Separator",
+      "mobile_slider_label": "Enable horizontal slider on mobile",
+      "menu_handles_label": "Menu Handles",
+      "menu_handles_info": "Comma-separated menu handles. Use * as wildcard."
+    }
+  }
+} 
