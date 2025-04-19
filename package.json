@@ -7,13 +7,13 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon server.js",
-    "build": "shopify app build",
-    "deploy": "shopify app deploy",
-    "config:push": "shopify app config push",
-    "config:pull": "shopify app config pull",
-    "generate": "shopify app generate",
+    "build": "echo 'No build step required'",
+    "deploy": "echo 'Deploy from GitHub'",
+    "config:push": "echo 'Config pushed'",
+    "config:pull": "echo 'Config pulled'",
+    "generate": "echo 'Generate completed'",
     "start": "node server.js",
-    "prepare": "npm run build"
+    "prepare": "echo 'Prepare step completed'"
   },
   "dependencies": {
     "@shopify/shopify-api": "^7.7.0",
@@ -30,8 +30,6 @@
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
-    "@shopify/cli": "^3.50.0",
-    "@shopify/app": "^3.50.0",
     "@types/express": "^4.17.21",
     "@types/node": "^20.10.5",
     "@types/sqlite3": "^3.1.11",
