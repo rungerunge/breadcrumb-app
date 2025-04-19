@@ -44,6 +44,7 @@ export default function HomePage() {
   const [toastContent, setToastContent] = useState('');
   const [selectedTab, setSelectedTab] = useState(0);
   const [connectionStatus, setConnectionStatus] = useState('checking');
+  const [retryCount, setRetryCount] = useState(0);
 
   const tabs = [
     {
@@ -68,10 +69,45 @@ export default function HomePage() {
     },
   ];
 
-  // Check server connectivity first
+  // Check server connectivity first with retry logic
   useEffect(() => {
-    checkServerConnection();
-  }, []);
+    const checkConnection = async () => {
+      try {
+        await checkServerConnection();
+      } catch (err) {
+        console.error("Connection check failed", err);
+        
+        // Retry logic - wait 3 seconds and try again up to 3 times
+        if (retryCount < 3) {
+          console.log(`Retrying connection (${retryCount + 1}/3) in 3 seconds...`);
+          setTimeout(() => {
+            setRetryCount(prev => prev + 1);
+          }, 3000);
+        } else {
+          // If still failing after 3 retries, try a fallback approach
+          console.log("Retries exhausted, loading default settings");
+          setConnectionStatus('failed');
+          setSettings({
+            fontSize: 14,
+            marginTop: 20,
+            marginBottom: 20,
+            separator: '›',
+            mobileSlider: true,
+            menuHandles: 'main-menu',
+            customCssDesktop: '',
+            customCssMobile: '',
+            customCssAll: '',
+            customCssLast: '',
+            customCssHover: '',
+            globalOverride: false
+          });
+          setInitialLoading(false);
+        }
+      }
+    };
+    
+    checkConnection();
+  }, [retryCount]);
 
   // Only load settings if connection is OK
   useEffect(() => {
@@ -82,28 +118,40 @@ export default function HomePage() {
 
   const checkServerConnection = async () => {
     try {
-      const response = await fetch('/health');
+      console.log("Checking server health...");
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5-second timeout
+      
+      const response = await fetch('/health', { signal: controller.signal });
+      clearTimeout(timeoutId);
+      
       if (response.ok) {
         console.log("Server health check passed");
         setConnectionStatus('connected');
+        return true;
       } else {
         console.error("Server health check failed with status:", response.status);
-        setConnectionStatus('failed');
-        setError(`Server returned ${response.status} status. Please check server logs.`);
-        setInitialLoading(false);
+        throw new Error(`Server returned ${response.status} status`);
       }
     } catch (err) {
       console.error("Server connection error:", err);
-      setConnectionStatus('failed');
-      setError("Cannot connect to server. Please check if the server is running.");
-      setInitialLoading(false);
+      if (err.name === 'AbortError') {
+        setError("Connection timed out. Server may be starting up, please wait.");
+      } else {
+        setError(`Cannot connect to server: ${err.message}`);
+      }
+      throw err;
     }
   };
 
   const loadSettings = async () => {
     try {
       console.log("Loading settings from API...");
-      const response = await fetch('/api/settings');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5-second timeout
+      
+      const response = await fetch('/api/settings', { signal: controller.signal });
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         throw new Error(`API returned ${response.status} ${response.statusText}`);
@@ -119,8 +167,12 @@ export default function HomePage() {
       }
     } catch (error) {
       console.error('Error loading settings:', error);
-      setError(`Failed to load settings: ${error.message}`);
-      showToast('Failed to load settings');
+      if (error.name === 'AbortError') {
+        setError("Settings request timed out. Please try again.");
+      } else {
+        setError(`Failed to load settings: ${error.message}`);
+        showToast('Failed to load settings');
+      }
     } finally {
       setInitialLoading(false);
     }
@@ -173,6 +225,9 @@ export default function HomePage() {
                 <Stack distribution="center" alignment="center" spacing="loose">
                   <Spinner accessibilityLabel="Loading settings" size="large" />
                   <Text variant="headingMd">Loading Smart Breadcrumbs Settings...</Text>
+                  {retryCount > 0 && (
+                    <Text variant="bodyMd">Retry attempt {retryCount}/3...</Text>
+                  )}
                 </Stack>
               </Card>
             </Layout.Section>
@@ -194,14 +249,20 @@ export default function HomePage() {
                   status="critical"
                 >
                   <p>{error}</p>
-                  <Button primary onClick={() => window.location.reload()}>Reload Page</Button>
+                  <p>If this is the first time you're running the app, it may take a minute for the server to start.</p>
+                  <Stack distribution="center" spacing="tight">
+                    <Button primary onClick={() => window.location.reload()}>Reload Page</Button>
+                    <Button onClick={() => setRetryCount(0)}>Retry Connection</Button>
+                  </Stack>
                 </Banner>
                 
                 <div style={{marginTop: '20px'}}>
                   <Card.Section title="Debug Information">
                     <p>Connection Status: {connectionStatus}</p>
                     <p>Error: {error}</p>
+                    <p>Retry Count: {retryCount}/3</p>
                     <p>Time: {new Date().toLocaleString()}</p>
+                    <p>Host URL: {window.location.href}</p>
                   </Card.Section>
                 </div>
               </Card>
@@ -339,10 +400,10 @@ export default function HomePage() {
                         <p>Add the breadcrumb snippet to your theme:</p>
                         <div>
                           <pre style={{background: '#f4f6f8', padding: '10px', overflowX: 'auto'}}>
-                            {`{% render 'smart-breadcrumbs-product' %}  // For product pages
-{% render 'smart-breadcrumbs-collection' %}  // For collection pages`}
+                            {`{% render 'smart-breadcrumbs' %}`}
                           </pre>
                         </div>
+                        <p>That's it! The app will automatically detect your page type and display the appropriate breadcrumbs.</p>
                         <h2>Frequently Asked Questions</h2>
                         <p>
                           <Link url="https://github.com/rungerunge/breadcrumb-app">View our Documentation</Link>
@@ -365,10 +426,16 @@ export default function HomePage() {
 Server Timestamp: ${new Date().toISOString()}
 App Version: 2.0.0
 Settings Loaded: ${initialLoading ? 'No' : 'Yes'}
+Render.com URL: ${window.location.origin}
+API Endpoint: ${window.location.origin}/api/settings
+Health Endpoint: ${window.location.origin}/health
 `}
                         </pre>
-                        <Button onClick={checkServerConnection}>Check Connection</Button>
-                        <Button onClick={loadSettings} style={{marginLeft: '10px'}}>Reload Settings</Button>
+                        <Stack distribution="leading" spacing="tight">
+                          <Button onClick={checkServerConnection}>Check Connection</Button>
+                          <Button onClick={loadSettings}>Reload Settings</Button>
+                          <Button onClick={() => window.location.reload()}>Reload Page</Button>
+                        </Stack>
                       </TextContainer>
                     </Stack>
                   )}
@@ -381,8 +448,7 @@ Settings Loaded: ${initialLoading ? 'No' : 'Yes'}
               <Card.Section>
                 <TextContainer>
                   <p>
-                    Use the menu handles field to specify which navigation menus
-                    should be used for breadcrumb generation.
+                    Use the main snippet <code>smart-breadcrumbs</code> for automatic page type detection.
                   </p>
                   <p>
                     The app will automatically find the best path in your menu
@@ -392,6 +458,11 @@ Settings Loaded: ${initialLoading ? 'No' : 'Yes'}
                     Enable the mobile slider for better navigation on small
                     screens.
                   </p>
+                  {connectionStatus !== 'connected' && (
+                    <Banner status="warning">
+                      Server connection issues detected. Some features may not work correctly.
+                    </Banner>
+                  )}
                 </TextContainer>
               </Card.Section>
             </Card>

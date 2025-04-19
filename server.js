@@ -20,14 +20,25 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
 
-const PORT = parseInt(process.env.PORT || '8081', 10);
-const isDev = process.env.NODE_ENV === 'development';
+// For Render.com compatibility - use the PORT that Render sets
+const PORT = parseInt(process.env.PORT || '10000', 10);
+const isDev = process.env.NODE_ENV !== 'production';
+
+// Better handling for Render.com services
+const HOST = process.env.HOST || '';
+const API_KEY = process.env.SHOPIFY_API_KEY || '';
+const API_SECRET = process.env.SHOPIFY_API_SECRET || '';
+const SCOPES = process.env.SCOPES?.split(',') || [];
 
 // Enhanced logging middleware
 const app = express();
 app.use(morgan('dev'));
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: '*', // This allows any domain to access your API (for development)
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Debug logger
 const debug = {
@@ -48,10 +59,20 @@ const requiredEnvVars = [
 const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
 if (missingEnvVars.length > 0) {
   debug.error(`Missing environment variables: ${missingEnvVars.join(', ')}`);
-  process.exit(1);
+  debug.error(`Make sure these are set in your Render.com environment variables.`);
+  // On Render.com, we don't want to exit immediately
+  if (isDev) {
+    process.exit(1);
+  }
 }
 
 debug.log('Environment loaded successfully');
+debug.log(`Server running in ${isDev ? 'development' : 'production'} mode`);
+debug.log(`HOST: ${HOST}`);
+
+// Database path - use mounted storage on Render
+const DB_PATH = isDev ? 'shopify.sqlite' : '/data/shopify.sqlite';
+debug.log(`Using database at ${DB_PATH}`);
 
 // Database initialization with better error handling
 let db;
@@ -60,7 +81,7 @@ const initDatabase = async () => {
   try {
     debug.log('Initializing database connection...');
     db = await open({
-      filename: 'shopify.sqlite',
+      filename: DB_PATH,
       driver: sqlite3.Database
     });
     
@@ -81,11 +102,11 @@ const initDatabase = async () => {
 
 // Initialize Shopify API
 const shopify = shopifyApi({
-  apiKey: process.env.SHOPIFY_API_KEY || '',
-  apiSecretKey: process.env.SHOPIFY_API_SECRET || '',
-  scopes: (process.env.SCOPES || '').split(','),
-  hostName: process.env.HOST ? process.env.HOST.replace(/https?:\/\//, '') : '',
-  hostScheme: process.env.HOST?.startsWith('https') ? 'https' : 'http',
+  apiKey: API_KEY,
+  apiSecretKey: API_SECRET,
+  scopes: SCOPES,
+  hostName: HOST.replace(/https?:\/\//, ''),
+  hostScheme: HOST.startsWith('https') ? 'https' : 'http',
   apiVersion: ApiVersion.October22,
   isEmbeddedApp: true,
   logger: {
@@ -109,19 +130,22 @@ const shopifyAppConfig = {
   webhooks: {
     path: '/api/webhooks',
   },
-  sessionStorage: new SQLiteSessionStorage('shopify.sqlite'),
+  sessionStorage: new SQLiteSessionStorage(DB_PATH),
 };
 
 // Initialize Shopify app middleware
 const shopifyMiddleware = shopifyApp(shopifyAppConfig);
 
-// Set up the health check endpoint before authentication
+// Set up the health check endpoint before authentication - this will help debug Render.com issues
 app.get('/health', (_req, res) => {
   const healthStatus = {
     status: 'ok',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'production',
+    port: PORT,
+    host: HOST,
     databaseConnected: db ? true : false,
+    databasePath: DB_PATH,
     version: '2.0.0'
   };
   res.status(200).json(healthStatus);
@@ -211,7 +235,7 @@ app.post('/api/settings', async (req, res) => {
 });
 
 // Serve index.html with injected API key
-app.get('/', (_req, res) => {
+app.get('/', (req, res) => {
   try {
     const htmlPath = join(__dirname, 'public', 'index.html');
     
@@ -221,7 +245,31 @@ app.get('/', (_req, res) => {
     }
     
     const htmlContent = fs.readFileSync(htmlPath, 'utf8');
-    const injectedHtml = htmlContent.replace('__SHOPIFY_API_KEY__', process.env.SHOPIFY_API_KEY || '');
+    const injectedHtml = htmlContent.replace('__SHOPIFY_API_KEY__', API_KEY);
+    res.send(injectedHtml);
+  } catch (error) {
+    debug.error('Error serving index.html:', error);
+    res.status(500).send(`Error serving index.html: ${error.message}`);
+  }
+});
+
+// Special route for Render.com to verify app is running
+app.get('/render-health', (req, res) => {
+  res.status(200).send('App is running on Render.com');
+});
+
+// Return the React app for all other routes
+app.get('*', (req, res) => {
+  try {
+    const htmlPath = join(__dirname, 'public', 'index.html');
+    
+    if (!fs.existsSync(htmlPath)) {
+      debug.error(`File not found: ${htmlPath}`);
+      return res.status(404).send('index.html not found');
+    }
+    
+    const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+    const injectedHtml = htmlContent.replace('__SHOPIFY_API_KEY__', API_KEY);
     res.send(injectedHtml);
   } catch (error) {
     debug.error('Error serving index.html:', error);
@@ -243,9 +291,13 @@ app.get('/', (_req, res) => {
       debug.log(`Server running on port ${PORT}`);
       console.log(`==> Your service is live 🚀`);
       console.log(`==> Health check available at http://localhost:${PORT}/health`);
+      console.log(`==> App is running at ${HOST}`);
     });
   } catch (error) {
     debug.error('Error starting server:', error);
-    process.exit(1);
+    // Don't exit in production (Render.com) to allow for retries
+    if (isDev) {
+      process.exit(1);
+    }
   }
 })(); 

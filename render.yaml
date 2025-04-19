@@ -16,6 +16,8 @@ services:
         value: https://breadcrumb-app.onrender.com
       - key: SCOPES
         value: read_themes,write_themes,read_products,read_content
+      - key: PORT
+        value: 10000
     healthCheckPath: /health
     autoDeploy: true
     disk:
