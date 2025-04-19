@@ -1,0 +1,44 @@
+name = "SmartBreadcrumbs"
+type = "theme"
+description = "Dynamic breadcrumb navigation for Shopify themes"
+
+[[extensions]]
+name = "Smart Breadcrumbs"
+handle = "smart-breadcrumbs"
+type = "theme"
+
+[settings]
+  [[settings.fields]]
+  key = "font_size"
+  type = "number"
+  name = "Font Size"
+  description = "Font size in pixels"
+  default = 14
+
+  [[settings.fields]]
+  key = "margin_top"
+  type = "number"
+  name = "Margin Top"
+  description = "Top margin in pixels"
+  default = 20
+
+  [[settings.fields]]
+  key = "margin_bottom"
+  type = "number"
+  name = "Margin Bottom"
+  description = "Bottom margin in pixels"
+  default = 20
+
+  [[settings.fields]]
+  key = "separator"
+  type = "text"
+  name = "Breadcrumb Separator"
+  description = "Character or HTML to separate breadcrumb items"
+  default = "›"
+
+  [[settings.fields]]
+  key = "mobile_slider"
+  type = "boolean"
+  name = "Enable Mobile Slider"
+  description = "Enable horizontal scrolling on mobile devices"
+  default = true 
