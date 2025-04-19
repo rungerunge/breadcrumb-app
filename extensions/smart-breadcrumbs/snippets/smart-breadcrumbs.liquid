@@ -1,14 +1,31 @@
 {% comment %}
-    Smart Breadcrumbs - Direct Implementation
-    Version: 3.1.0
-    No JavaScript, no storage, no external requests
+    Smart Breadcrumbs - Debug Version
+    Version: 3.2.0
+    Includes debugging and visual indicators
 {% endcomment %}
 
 {% liquid
   assign current_url = request.path
+  assign template_type = template | split: '.' | first
+  assign debug_mode = true
 %}
 
-<nav aria-label="Breadcrumbs" class="breadcrumb__container">
+<!-- Breadcrumbs Debug Info (Start) -->
+{% if debug_mode %}
+<div class="breadcrumb-debug" style="background: #f0f8ff; border: 1px solid #b0e0e6; padding: 10px; margin: 10px 0; font-family: monospace; font-size: 12px;">
+  <div><strong>Breadcrumb Debug Info:</strong></div>
+  <div>Template: {{ template }}</div>
+  <div>Template Type: {{ template_type }}</div>
+  <div>Current URL: {{ current_url }}</div>
+  <div>Page Title: {{ page_title }}</div>
+  {% if collection %}<div>Collection: {{ collection.title }} ({{ collection.id }})</div>{% endif %}
+  {% if product %}<div>Product: {{ product.title }} ({{ product.id }})</div>{% endif %}
+  {% if page %}<div>Page: {{ page.title }} ({{ page.id }})</div>{% endif %}
+</div>
+{% endif %}
+<!-- Breadcrumbs Debug Info (End) -->
+
+<nav aria-label="Breadcrumbs" class="breadcrumb__container" data-breadcrumb-component="true">
   <ol class="breadcrumb__list">
     <li class="breadcrumb__item">
       <a href="/" class="breadcrumb__link">Home</a>
@@ -58,6 +75,9 @@
     margin: 1em 0;
     font-size: 14px;
     line-height: 1.5;
+    background-color: rgba(245, 245, 245, 0.7);
+    padding: 8px 12px;
+    border-radius: 4px;
   }
   .breadcrumb__list {
     display: flex;
@@ -75,7 +95,7 @@
     color: #999;
   }
   .breadcrumb__link {
-    color: #666;
+    color: #2a6496;
     text-decoration: none;
   }
   .breadcrumb__link:hover {
@@ -85,4 +105,24 @@
     color: #333;
     font-weight: 500;
   }
-</style> 
+</style>
+
+{% if debug_mode %}
+<!-- Inject debugging script -->
+<script>
+  console.log('=== BREADCRUMB DEBUG INFO ===');
+  console.log('Template:', {{ template | json }});
+  console.log('URL:', {{ request.path | json }});
+  console.log('Collection:', {% if collection %}{{ collection.title | json }}{% else %}null{% endif %});
+  console.log('Product:', {% if product %}{{ product.title | json }}{% else %}null{% endif %});
+  document.addEventListener('DOMContentLoaded', function() {
+    const breadcrumb = document.querySelector('[data-breadcrumb-component]');
+    if (breadcrumb) {
+      console.log('✅ Breadcrumb element found in DOM:', breadcrumb);
+      breadcrumb.style.border = '2px dashed green';
+    } else {
+      console.error('❌ Breadcrumb element NOT found in DOM');
+    }
+  });
+</script>
+{% endif %} 
