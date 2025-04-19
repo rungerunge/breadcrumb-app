@@ -53,22 +53,31 @@ if (missingEnvVars.length > 0) {
 
 debug.log('Environment loaded successfully');
 
-// Initialize database connection
+// Database initialization with better error handling
 let db;
-(async () => {
-  db = await open({
-    filename: 'shopify.sqlite',
-    driver: sqlite3.Database
-  });
-  
-  // Create settings table if it doesn't exist
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS settings (
-      shop TEXT PRIMARY KEY,
-      settings TEXT
-    )
-  `);
-})();
+
+const initDatabase = async () => {
+  try {
+    debug.log('Initializing database connection...');
+    db = await open({
+      filename: 'shopify.sqlite',
+      driver: sqlite3.Database
+    });
+    
+    // Create settings table if it doesn't exist
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS settings (
+        shop TEXT PRIMARY KEY,
+        settings TEXT
+      )
+    `);
+    debug.log('Database initialized successfully');
+    return true;
+  } catch (error) {
+    debug.error('Database initialization failed:', error);
+    return false;
+  }
+};
 
 // Initialize Shopify API
 const shopify = shopifyApi({
@@ -108,7 +117,14 @@ const shopifyMiddleware = shopifyApp(shopifyAppConfig);
 
 // Set up the health check endpoint before authentication
 app.get('/health', (_req, res) => {
-  res.status(200).json({ status: 'ok' });
+  const healthStatus = {
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'production',
+    databaseConnected: db ? true : false,
+    version: '2.0.0'
+  };
+  res.status(200).json(healthStatus);
 });
 
 // Set up static file serving
@@ -129,47 +145,104 @@ app.post(
 // All subsequent routes need authentication
 app.use('/api/*', shopifyMiddleware.validateAuthenticatedSession());
 
-// Settings API routes
+// Settings API routes with improved error handling
 app.get('/api/settings', async (req, res) => {
   try {
+    if (!db) {
+      throw new Error('Database connection not initialized');
+    }
+    
     const shop = res.locals.shopify.session.shop;
+    debug.log(`Fetching settings for shop: ${shop}`);
+    
     const result = await db.get('SELECT settings FROM settings WHERE shop = ?', [shop]);
-    res.json({ settings: result ? JSON.parse(result.settings) : {} });
+    debug.log(`Settings query result:`, result);
+    
+    if (result && result.settings) {
+      const parsedSettings = JSON.parse(result.settings);
+      res.json({ settings: parsedSettings });
+    } else {
+      // Return default settings if none found
+      const defaultSettings = {
+        fontSize: 14,
+        marginTop: 20,
+        marginBottom: 20,
+        separator: '›',
+        mobileSlider: true,
+        menuHandles: 'main-menu',
+        customCssDesktop: '',
+        customCssMobile: '',
+        customCssAll: '',
+        customCssLast: '',
+        customCssHover: '',
+        globalOverride: false
+      };
+      debug.log(`No settings found for shop ${shop}, returning defaults`);
+      res.json({ settings: defaultSettings });
+    }
   } catch (error) {
-    console.error('Error fetching settings:', error);
-    res.status(500).json({ error: 'Failed to fetch settings' });
+    debug.error('Error fetching settings:', error);
+    res.status(500).json({ error: `Failed to fetch settings: ${error.message}` });
   }
 });
 
 app.post('/api/settings', async (req, res) => {
   try {
+    if (!db) {
+      throw new Error('Database connection not initialized');
+    }
+    
     const shop = res.locals.shopify.session.shop;
     const settings = JSON.stringify(req.body);
+    
+    debug.log(`Saving settings for shop: ${shop}`);
+    
     await db.run(
       'INSERT INTO settings (shop, settings) VALUES (?, ?) ON CONFLICT(shop) DO UPDATE SET settings = ?',
       [shop, settings, settings]
     );
+    
+    debug.log(`Settings saved successfully for shop: ${shop}`);
     res.json({ success: true });
   } catch (error) {
-    console.error('Error saving settings:', error);
-    res.status(500).json({ error: 'Failed to save settings' });
+    debug.error('Error saving settings:', error);
+    res.status(500).json({ error: `Failed to save settings: ${error.message}` });
   }
 });
 
 // Serve index.html with injected API key
 app.get('/', (_req, res) => {
-  const htmlContent = fs.readFileSync(join(__dirname, 'public', 'index.html'), 'utf8');
-  const injectedHtml = htmlContent.replace('__SHOPIFY_API_KEY__', process.env.SHOPIFY_API_KEY || '');
-  res.send(injectedHtml);
+  try {
+    const htmlPath = join(__dirname, 'public', 'index.html');
+    
+    if (!fs.existsSync(htmlPath)) {
+      debug.error(`File not found: ${htmlPath}`);
+      return res.status(404).send('index.html not found');
+    }
+    
+    const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+    const injectedHtml = htmlContent.replace('__SHOPIFY_API_KEY__', process.env.SHOPIFY_API_KEY || '');
+    res.send(injectedHtml);
+  } catch (error) {
+    debug.error('Error serving index.html:', error);
+    res.status(500).send(`Error serving index.html: ${error.message}`);
+  }
 });
 
 // Initialize the application
 (async () => {
   try {
+    // Initialize database first
+    const dbInitialized = await initDatabase();
+    if (!dbInitialized) {
+      debug.error('Failed to initialize database. Application will continue but may not function correctly.');
+    }
+    
     // Start server
     app.listen(PORT, () => {
       debug.log(`Server running on port ${PORT}`);
       console.log(`==> Your service is live 🚀`);
+      console.log(`==> Health check available at http://localhost:${PORT}/health`);
     });
   } catch (error) {
     debug.error('Error starting server:', error);

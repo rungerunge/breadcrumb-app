@@ -1,0 +1,43 @@
+{% comment %}
+    Smart Breadcrumbs - Main Snippet
+    Version: 2.0.0
+    
+    This is the main entry point for Smart Breadcrumbs.
+    It automatically detects the page type and renders the appropriate breadcrumb template.
+{% endcomment %}
+
+{% if template contains 'product' %}
+  {% render 'smart-breadcrumbs-product' %}
+{% elsif template contains 'collection' %}
+  {% render 'smart-breadcrumbs-collection' %}
+{% elsif template contains 'page' or template contains 'blog' or template contains 'article' %}
+  {% comment %}
+    Future support for pages, blog posts, and articles
+  {% endcomment %}
+  <nav class="smart-breadcrumbs" aria-label="breadcrumb">
+    <ol class="smart-breadcrumbs__list">
+      <li class="smart-breadcrumbs__item">
+        <a href="/" class="smart-breadcrumbs__link">{{ 'general.breadcrumbs.home' | t }}</a>
+        <span class="smart-breadcrumbs__separator" aria-hidden="true">/</span>
+      </li>
+      
+      {% if template contains 'page' %}
+        <li class="smart-breadcrumbs__item">
+          <span class="smart-breadcrumbs__current" aria-current="page">{{ page.title }}</span>
+        </li>
+      {% elsif template contains 'blog' %}
+        <li class="smart-breadcrumbs__item">
+          <span class="smart-breadcrumbs__current" aria-current="page">{{ blog.title }}</span>
+        </li>
+      {% elsif template contains 'article' %}
+        <li class="smart-breadcrumbs__item">
+          <a href="{{ blog.url }}" class="smart-breadcrumbs__link">{{ blog.title }}</a>
+          <span class="smart-breadcrumbs__separator" aria-hidden="true">/</span>
+        </li>
+        <li class="smart-breadcrumbs__item">
+          <span class="smart-breadcrumbs__current" aria-current="page">{{ article.title }}</span>
+        </li>
+      {% endif %}
+    </ol>
+  </nav>
+{% endif %} 
