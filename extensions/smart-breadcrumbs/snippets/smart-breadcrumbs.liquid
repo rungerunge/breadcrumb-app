@@ -6,22 +6,221 @@
     It automatically detects the page type and renders the appropriate breadcrumb template.
 {% endcomment %}
 
-{% if template contains 'product' %}
-  {% render 'smart-breadcrumbs-product' %}
-{% elsif template contains 'collection' %}
-  {% render 'smart-breadcrumbs-collection' %}
-{% elsif template contains 'page' or template contains 'blog' or template contains 'article' %}
-  {% comment %}
-    Future support for pages, blog posts, and articles
-  {% endcomment %}
-  <nav class="smart-breadcrumbs" aria-label="breadcrumb">
-    <ol class="smart-breadcrumbs__list">
-      <li class="smart-breadcrumbs__item">
-        <a href="/" class="smart-breadcrumbs__link">{{ 'general.breadcrumbs.home' | t }}</a>
-        <span class="smart-breadcrumbs__separator" aria-hidden="true">/</span>
-      </li>
-      
-      {% if template contains 'page' %}
+{%- style -%}
+.smart-breadcrumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 10px 0;
+    margin: 0;
+    list-style: none;
+    font-size: var(--breadcrumb-font-size, 14px);
+}
+
+.smart-breadcrumbs__list {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+{% if settings.enable_mobile_slider %}
+@media screen and (max-width: 768px) {
+    .smart-breadcrumbs__list {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 5px;
+    }
+    
+    .smart-breadcrumbs__list::-webkit-scrollbar {
+        display: none;
+    }
+}
+{% endif %}
+
+.smart-breadcrumbs__item {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.smart-breadcrumbs__link {
+    color: var(--breadcrumb-color, #666);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.smart-breadcrumbs__link:hover {
+    color: var(--breadcrumb-hover-color, #000);
+}
+
+.smart-breadcrumbs__separator {
+    margin: 0 8px;
+    color: var(--breadcrumb-separator-color, #999);
+}
+
+.smart-breadcrumbs__current {
+    color: var(--breadcrumb-current-color, #333);
+    font-weight: 500;
+}
+
+{% if settings.custom_css_all != blank %}
+{{ settings.custom_css_all }}
+{% endif %}
+
+{% if settings.custom_css_last != blank %}
+.smart-breadcrumbs__item:last-child {
+    {{ settings.custom_css_last }}
+}
+{% endif %}
+
+{% if settings.custom_css_hover != blank %}
+.smart-breadcrumbs__link:hover {
+    {{ settings.custom_css_hover }}
+}
+{% endif %}
+
+@media screen and (min-width: 769px) {
+    {% if settings.custom_css_desktop != blank %}
+    {{ settings.custom_css_desktop }}
+    {% endif %}
+}
+
+@media screen and (max-width: 768px) {
+    .smart-breadcrumbs {
+        font-size: var(--breadcrumb-mobile-font-size, 12px);
+    }
+    
+    .smart-breadcrumbs__separator {
+        margin: 0 4px;
+    }
+    
+    {% if settings.custom_css_mobile != blank %}
+    {{ settings.custom_css_mobile }}
+    {% endif %}
+}
+{%- endstyle -%}
+
+{% liquid
+  # Define variables
+  assign menu_handles = settings.menu_handles | default: 'main-menu'
+  assign menu_handle_list = menu_handles | split: ','
+  assign breadcrumb_found = false
+  assign paths = ''
+  
+  # Get current page URL
+  assign current_url = canonical_url | default: request.path
+
+  # Try to find the current page in specified menus
+  for handle in menu_handle_list
+    assign menu = linklists[handle]
+    if menu != blank
+      # Check first level
+      for link in menu.links
+        if link.url contains current_url or current_url contains link.url
+          assign breadcrumb_found = true
+          assign paths = paths | append: link.title | append: '|' | append: link.url | append: ','
+          break
+        endif
+        
+        # Check second level
+        for child_link in link.links
+          if child_link.url contains current_url or current_url contains child_link.url
+            assign breadcrumb_found = true
+            assign paths = paths | append: link.title | append: '|' | append: link.url | append: ',' | append: child_link.title | append: '|' | append: child_link.url | append: ','
+            break
+          endif
+          
+          # Check third level
+          for grandchild_link in child_link.links
+            if grandchild_link.url contains current_url or current_url contains grandchild_link.url
+              assign breadcrumb_found = true
+              assign paths = paths | append: link.title | append: '|' | append: link.url | append: ',' | append: child_link.title | append: '|' | append: child_link.url | append: ',' | append: grandchild_link.title | append: '|' | append: grandchild_link.url | append: ','
+              break
+            endif
+          endfor
+          
+          if breadcrumb_found
+            break
+          endif
+        endfor
+        
+        if breadcrumb_found
+          break
+        endif
+      endfor
+    endif
+    
+    if breadcrumb_found
+      break
+    endif
+  endfor
+%}
+
+<nav class="smart-breadcrumbs" aria-label="breadcrumb">
+  <ol class="smart-breadcrumbs__list">
+    {% comment %} Home Link {% endcomment %}
+    <li class="smart-breadcrumbs__item">
+      <a href="/" class="smart-breadcrumbs__link">{{ 'general.breadcrumbs.home' | t }}</a>
+      <span class="smart-breadcrumbs__separator" aria-hidden="true">{{ settings.separator | default: '/' }}</span>
+    </li>
+    
+    {% if breadcrumb_found %}
+      {% comment %} Display breadcrumbs from menu structure {% endcomment %}
+      {% assign path_array = paths | split: ',' %}
+      {% for path_item in path_array %}
+        {% if path_item != blank %}
+          {% assign path_parts = path_item | split: '|' %}
+          {% assign path_title = path_parts[0] %}
+          {% assign path_url = path_parts[1] %}
+          
+          {% if forloop.last %}
+            <li class="smart-breadcrumbs__item">
+              <span class="smart-breadcrumbs__current" aria-current="page">{{ path_title }}</span>
+            </li>
+          {% else %}
+            <li class="smart-breadcrumbs__item">
+              <a href="{{ path_url }}" class="smart-breadcrumbs__link">{{ path_title }}</a>
+              <span class="smart-breadcrumbs__separator" aria-hidden="true">{{ settings.separator | default: '/' }}</span>
+            </li>
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+    {% else %}
+      {% comment %} Fallback to default hierarchy: Home > Collection > Product {% endcomment %}
+      {% if template contains 'product' %}
+        {% comment %} Collection Link (if available) {% endcomment %}
+        {% if collection %}
+          <li class="smart-breadcrumbs__item">
+            <a href="{{ collection.url }}" class="smart-breadcrumbs__link">{{ collection.title }}</a>
+            <span class="smart-breadcrumbs__separator" aria-hidden="true">{{ settings.separator | default: '/' }}</span>
+          </li>
+        {% endif %}
+        
+        {% comment %} Current Product {% endcomment %}
+        <li class="smart-breadcrumbs__item">
+          <span class="smart-breadcrumbs__current" aria-current="page">{{ product.title }}</span>
+        </li>
+      {% elsif template contains 'collection' %}
+        {% comment %} Parent Collection Link (if available) {% endcomment %}
+        {% if collection.metafields.custom.parent_collection %}
+          {% assign parent_collection = collections[collection.metafields.custom.parent_collection] %}
+          {% if parent_collection %}
+            <li class="smart-breadcrumbs__item">
+              <a href="{{ parent_collection.url }}" class="smart-breadcrumbs__link">{{ parent_collection.title }}</a>
+              <span class="smart-breadcrumbs__separator" aria-hidden="true">{{ settings.separator | default: '/' }}</span>
+            </li>
+          {% endif %}
+        {% endif %}
+        
+        {% comment %} Current Collection {% endcomment %}
+        <li class="smart-breadcrumbs__item">
+          <span class="smart-breadcrumbs__current" aria-current="page">{{ collection.title }}</span>
+        </li>
+      {% elsif template contains 'page' %}
         <li class="smart-breadcrumbs__item">
           <span class="smart-breadcrumbs__current" aria-current="page">{{ page.title }}</span>
         </li>
@@ -32,12 +231,12 @@
       {% elsif template contains 'article' %}
         <li class="smart-breadcrumbs__item">
           <a href="{{ blog.url }}" class="smart-breadcrumbs__link">{{ blog.title }}</a>
-          <span class="smart-breadcrumbs__separator" aria-hidden="true">/</span>
+          <span class="smart-breadcrumbs__separator" aria-hidden="true">{{ settings.separator | default: '/' }}</span>
         </li>
         <li class="smart-breadcrumbs__item">
           <span class="smart-breadcrumbs__current" aria-current="page">{{ article.title }}</span>
         </li>
       {% endif %}
-    </ol>
-  </nav>
-{% endif %} 
+    {% endif %}
+  </ol>
+</nav> 

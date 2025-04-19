@@ -112,40 +112,84 @@
             padding: 2px 4px;
             border-radius: 3px;
         }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+        }
+        .slider-container input {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+        .slider-value {
+            min-width: 40px;
+            text-align: right;
+            font-weight: bold;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #5c6ac4;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 4px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+        .toast.show {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>Smart Breadcrumbs Settings</h1>
-            <button class="button">Save</button>
+            <button class="button" id="saveButton">Save</button>
         </div>
 
         <div class="layout">
             <div class="main-section">
                 <div class="card">
                     <div class="tabs">
-                        <div class="tab active">Layout Settings</div>
-                        <div class="tab">Custom CSS</div>
-                        <div class="tab">Help</div>
+                        <div class="tab active" data-tab="layout-settings">Layout Settings</div>
+                        <div class="tab" data-tab="custom-css">Custom CSS</div>
+                        <div class="tab" data-tab="help">Help</div>
                     </div>
 
-                    <div class="tab-content">
+                    <div class="tab-content active" id="layout-settings">
                         <div class="form-group checkbox">
                             <input type="checkbox" id="globalOverride">
                             <label for="globalOverride">Enable Global Override</label>
+                            <p><small>When enabled, these settings will override individual block settings</small></p>
                         </div>
                         <div class="form-group">
-                            <label for="fontSize">Font Size (px): 14</label>
-                            <input type="range" id="fontSize" class="range-slider" min="10" max="24" value="14">
+                            <label for="fontSize">Font Size (px)</label>
+                            <div class="slider-container">
+                                <input type="range" id="fontSize" class="range-slider" min="10" max="24" value="14">
+                                <span class="slider-value" id="fontSizeValue">14</span>
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label for="marginTop">Margin Top (px): 20</label>
-                            <input type="range" id="marginTop" class="range-slider" min="0" max="50" value="20">
+                            <label for="marginTop">Margin Top (px)</label>
+                            <div class="slider-container">
+                                <input type="range" id="marginTop" class="range-slider" min="0" max="50" value="20">
+                                <span class="slider-value" id="marginTopValue">20</span>
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label for="marginBottom">Margin Bottom (px): 20</label>
-                            <input type="range" id="marginBottom" class="range-slider" min="0" max="50" value="20">
+                            <label for="marginBottom">Margin Bottom (px)</label>
+                            <div class="slider-container">
+                                <input type="range" id="marginBottom" class="range-slider" min="0" max="50" value="20">
+                                <span class="slider-value" id="marginBottomValue">20</span>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="separator">Breadcrumb Separator</label>
@@ -161,6 +205,57 @@
                             <p><small>Comma-separated menu handles. Use * as wildcard.</small></p>
                         </div>
                     </div>
+
+                    <div class="tab-content" id="custom-css">
+                        <div class="form-group">
+                            <label for="customCssDesktop">Desktop/Tablet CSS</label>
+                            <textarea id="customCssDesktop" rows="4"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="customCssMobile">Mobile CSS</label>
+                            <textarea id="customCssMobile" rows="4"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="customCssAll">All Breadcrumbs CSS</label>
+                            <textarea id="customCssAll" rows="4"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="customCssLast">Last Breadcrumb CSS</label>
+                            <textarea id="customCssLast" rows="4"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="customCssHover">Hover State CSS</label>
+                            <textarea id="customCssHover" rows="4"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="help">
+                        <h2>How to Use Smart Breadcrumbs</h2>
+                        <p>Add the breadcrumb snippet to your theme:</p>
+                        <pre>{% render 'smart-breadcrumbs' %}</pre>
+                        <p>That's it! The breadcrumbs will now be shown with proper hierarchy following your menu structure:</p>
+                        <ul>
+                            <li>For product pages: Home > Collection > Product</li>
+                            <li>For collection pages: Home > Parent Collection > Collection</li>
+                        </ul>
+
+                        <h3>Menu Structure</h3>
+                        <p>The app uses your store's navigation menus to generate breadcrumbs. Enter menu handles in the "Menu Handles" field (comma-separated).</p>
+                        
+                        <h3>Fallback Logic</h3>
+                        <p>If a page isn't found in your navigation menus, the app will use a default breadcrumb structure.</p>
+                        
+                        <h2>Frequently Asked Questions</h2>
+                        <p>
+                            <a href="https://github.com/rungerunge/breadcrumb-app" target="_blank">View Documentation</a>
+                        </p>
+                        <h2>Need Help?</h2>
+                        <p>
+                            <a href="mailto:support@smartbreadcrumbs.com">
+                                Contact Support
+                            </a>
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -171,23 +266,83 @@
                     <p>The app will automatically find the best path in your menu structure to create accurate breadcrumbs.</p>
                     <p>Enable the mobile slider for better navigation on small screens.</p>
                 </div>
+                
+                <div class="card">
+                    <h3>Preview</h3>
+                    <div id="breadcrumbPreview" style="padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 4px;">
+                        <div style="display: flex; align-items: center;">
+                            <a href="#" style="color: #666; text-decoration: none;">Home</a>
+                            <span id="previewSeparator" style="margin: 0 8px; color: #999;">›</span>
+                            <a href="#" style="color: #666; text-decoration: none;">Collection</a>
+                            <span id="previewSeparator2" style="margin: 0 8px; color: #999;">›</span>
+                            <span style="color: #333; font-weight: 500;">Product</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+    
+    <div id="toast" class="toast"></div>
 
     <script>
-        // Simple functionality to switch tabs
-        document.querySelectorAll('.tab').forEach((tab, index) => {
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', () => {
+                // Remove active class from all tabs and content
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab
                 tab.classList.add('active');
+                
+                // Show corresponding content
+                const tabId = tab.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
             });
         });
 
-        // Simulating save
-        document.querySelector('.button').addEventListener('click', () => {
-            alert('Settings saved successfully!');
+        // Slider value updates
+        document.getElementById('fontSize').addEventListener('input', function() {
+            document.getElementById('fontSizeValue').textContent = this.value;
+            updatePreview();
         });
+        
+        document.getElementById('marginTop').addEventListener('input', function() {
+            document.getElementById('marginTopValue').textContent = this.value;
+        });
+        
+        document.getElementById('marginBottom').addEventListener('input', function() {
+            document.getElementById('marginBottomValue').textContent = this.value;
+        });
+        
+        // Separator update
+        document.getElementById('separator').addEventListener('input', function() {
+            updatePreview();
+        });
+        
+        function updatePreview() {
+            const separator = document.getElementById('separator').value || '›';
+            const fontSize = document.getElementById('fontSize').value + 'px';
+            
+            document.getElementById('previewSeparator').textContent = separator;
+            document.getElementById('previewSeparator2').textContent = separator;
+            document.getElementById('breadcrumbPreview').style.fontSize = fontSize;
+        }
+
+        // Save functionality
+        document.getElementById('saveButton').addEventListener('click', function() {
+            const toast = document.getElementById('toast');
+            toast.textContent = 'Settings saved successfully!';
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        });
+        
+        // Initialize the preview
+        updatePreview();
     </script>
 </body>
 </html> 
