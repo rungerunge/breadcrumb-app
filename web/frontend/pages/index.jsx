@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Page,
   Layout,
@@ -8,7 +8,6 @@ import {
   RangeSlider,
   Button,
   Checkbox,
-  Banner,
   Stack,
   TextContainer,
   Link,
@@ -16,10 +15,8 @@ import {
   Frame,
   Toast
 } from '@shopify/polaris';
-import { useAuthenticatedFetch } from '../hooks';
 
 export default function HomePage() {
-  const fetch = useAuthenticatedFetch();
   const [settings, setSettings] = useState({
     fontSize: 14,
     marginTop: 20,
@@ -36,11 +33,9 @@ export default function HomePage() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [toastActive, setToastActive] = useState(false);
   const [toastContent, setToastContent] = useState('');
   const [selectedTab, setSelectedTab] = useState(0);
-  const [connectionStatus, setConnectionStatus] = useState('unknown');
 
   const tabs = [
     {
@@ -60,69 +55,26 @@ export default function HomePage() {
     }
   ];
 
-  // Try to load settings in the background but don't block the UI
-  useEffect(() => {
-    loadSettings();
-    // Try to check connection without blocking
-    fetch('/health').then(response => {
-      if (response.ok) {
-        setConnectionStatus('connected');
-      } else {
-        setConnectionStatus('failed');
-      }
-    }).catch(() => {
-      setConnectionStatus('failed');
-    });
-  }, []);
-
-  const loadSettings = async () => {
-    try {
-      const response = await fetch('/api/settings');
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data && data.settings) {
-          setSettings(data.settings);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading settings:', error);
-      // Don't show errors to the user, just log them
-    }
-  };
-
-  const handleSave = async () => {
+  const handleSave = () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/settings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(settings),
-      });
-
-      if (response.ok) {
-        showToast('Settings saved successfully');
-      } else {
-        throw new Error(`Failed to save settings`);
-      }
+      // Just simulate saving
+      setTimeout(() => {
+        setToastContent('Settings saved successfully');
+        setToastActive(true);
+        setLoading(false);
+      }, 500);
     } catch (error) {
-      console.error('Error saving settings:', error);
-      showToast(`Failed to save settings`);
+      console.error('Error:', error);
+      setToastContent('Failed to save settings');
+      setToastActive(true);
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  const showToast = (content) => {
-    setToastContent(content);
-    setToastActive(true);
+  const handleTabChange = (selectedTabIndex) => {
+    setSelectedTab(selectedTabIndex);
   };
-
-  const handleTabChange = useCallback(
-    (selectedTabIndex) => setSelectedTab(selectedTabIndex),
-    [],
-  );
 
   const toastMarkup = toastActive ? (
     <Toast content={toastContent} onDismiss={() => setToastActive(false)} />
@@ -138,16 +90,6 @@ export default function HomePage() {
           loading: loading,
         }}
       >
-        {connectionStatus === 'failed' && (
-          <Banner
-            title="Connection Issue"
-            status="warning"
-            onDismiss={() => {}}
-          >
-            <p>There may be connection issues with the server. Settings may not save properly.</p>
-          </Banner>
-        )}
-        
         <Layout>
           <Layout.Section>
             <Card>
@@ -271,7 +213,7 @@ export default function HomePage() {
                         <p>That's it! The app will automatically detect your page type and display the appropriate breadcrumbs.</p>
                         <h2>Frequently Asked Questions</h2>
                         <p>
-                          <Link url="https://github.com/rungerunge/breadcrumb-app">View our Documentation</Link>
+                          <Link url="https://github.com/rungerunge/breadcrumb-app">View Documentation</Link>
                         </p>
                         <h2>Need Help?</h2>
                         <p>

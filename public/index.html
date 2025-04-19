@@ -17,190 +17,177 @@
     <script src="/js/app.js" defer></script>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             padding: 0;
-            color: #202223;
+            background-color: #f6f6f7;
         }
-        
         .container {
             max-width: 1200px;
-            margin: 0 auto;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 4px;
+            box-shadow: 0 0 0 1px rgba(63, 63, 68, 0.05), 0 1px 3px 0 rgba(63, 63, 68, 0.15);
+            margin-bottom: 20px;
             padding: 20px;
         }
-        
-        h1 {
-            font-size: 28px;
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
             margin-bottom: 20px;
-            font-weight: 600;
         }
-        
-        .card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 0 0 1px rgba(63, 63, 68, 0.05), 0 1px 3px 0 rgba(63, 63, 68, 0.15);
-            margin-bottom: 16px;
-            padding: 16px;
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
         }
-        
-        .card h2 {
-            font-size: 16px;
-            font-weight: 600;
-            margin-top: 0;
-            margin-bottom: 16px;
-            border-bottom: 1px solid #e1e3e5;
-            padding-bottom: 12px;
+        .tab.active {
+            border-bottom: 2px solid #5c6ac4;
+            color: #5c6ac4;
         }
-        
-        .form-group {
-            margin-bottom: 16px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 4px;
-            font-weight: 500;
-            font-size: 14px;
-        }
-        
-        input[type="text"], 
-        input[type="number"],
-        textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #c4cdd5;
-            border-radius: 4px;
-            font-size: 14px;
-            box-sizing: border-box;
-        }
-        
-        textarea {
-            min-height: 100px;
-            font-family: monospace;
-        }
-        
-        button {
-            background-color: #008060;
+        .button {
+            background-color: #5c6ac4;
             color: white;
             border: none;
-            padding: 8px 16px;
             border-radius: 4px;
+            padding: 8px 16px;
             cursor: pointer;
-            font-size: 14px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
             font-weight: 500;
         }
-        
-        button:hover {
-            background-color: #006e52;
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
-        
-        button:disabled {
-            background-color: #9c9c9c;
-            cursor: not-allowed;
+        .range-slider {
+            width: 100%;
         }
-        
-        .settings-section {
-            margin-bottom: 24px;
-        }
-        
-        .checkbox-wrapper {
+        .checkbox {
             display: flex;
             align-items: center;
-            margin-bottom: 8px;
         }
-        
-        .checkbox-wrapper input[type="checkbox"] {
-            margin-right: 8px;
+        .checkbox input {
+            width: auto;
+            margin-right: 10px;
         }
-        
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 12px 20px;
+        .layout {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .main-section {
+            flex: 3;
+            min-width: 300px;
+            margin-right: 20px;
+        }
+        .sidebar {
+            flex: 1;
+            min-width: 250px;
+        }
+        pre {
+            background-color: #f4f6f8;
+            padding: 10px;
             border-radius: 4px;
-            color: white;
-            z-index: 1000;
-            opacity: 0.9;
-            transition: opacity 0.5s;
+            overflow-x: auto;
         }
-        
-        .toast.success {
-            background-color: #008060;
-        }
-        
-        .toast.error {
-            background-color: #d82c0d;
-        }
-        
-        .toast.fade-out {
-            opacity: 0;
-        }
-        
-        .loading-spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #008060;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 40px auto;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .text-center {
-            text-align: center;
-        }
-        
-        .loading-container, .error-container {
-            text-align: center;
-            padding: 40px 0;
-        }
-        
-        .error-container {
-            color: #d82c0d;
-            display: none;
-        }
-        
-        .help-text {
-            color: #637381;
-            font-size: 12px;
-            margin-top: 4px;
+        code {
+            font-family: monospace;
+            background-color: #f4f6f8;
+            padding: 2px 4px;
+            border-radius: 3px;
         }
     </style>
 </head>
 <body>
-    <div id="app">
-        <div class="settings-container">
+    <div class="container">
+        <div class="header">
             <h1>Smart Breadcrumbs Settings</h1>
-            
-            <!-- Loading spinner -->
-            <div class="loading-spinner" id="loading-spinner"></div>
-            
-            <!-- Error container -->
-            <div class="error-container" style="display: none;">
-                <h2>Error Loading Settings</h2>
-                <p>Failed to load settings: 500</p>
-                <div class="button-container">
-                    <button class="Polaris-Button" onclick="window.location.reload()">
-                        <span class="Polaris-Button__Content">Try Again</span>
-                    </button>
-                    <button class="Polaris-Button Polaris-Button--primary" onclick="window.location.href='/api/auth'">
-                        <span class="Polaris-Button__Content">Authenticate</span>
-                    </button>
+            <button class="button">Save</button>
+        </div>
+
+        <div class="layout">
+            <div class="main-section">
+                <div class="card">
+                    <div class="tabs">
+                        <div class="tab active">Layout Settings</div>
+                        <div class="tab">Custom CSS</div>
+                        <div class="tab">Help</div>
+                    </div>
+
+                    <div class="tab-content">
+                        <div class="form-group checkbox">
+                            <input type="checkbox" id="globalOverride">
+                            <label for="globalOverride">Enable Global Override</label>
+                        </div>
+                        <div class="form-group">
+                            <label for="fontSize">Font Size (px): 14</label>
+                            <input type="range" id="fontSize" class="range-slider" min="10" max="24" value="14">
+                        </div>
+                        <div class="form-group">
+                            <label for="marginTop">Margin Top (px): 20</label>
+                            <input type="range" id="marginTop" class="range-slider" min="0" max="50" value="20">
+                        </div>
+                        <div class="form-group">
+                            <label for="marginBottom">Margin Bottom (px): 20</label>
+                            <input type="range" id="marginBottom" class="range-slider" min="0" max="50" value="20">
+                        </div>
+                        <div class="form-group">
+                            <label for="separator">Breadcrumb Separator</label>
+                            <input type="text" id="separator" value="›">
+                        </div>
+                        <div class="form-group checkbox">
+                            <input type="checkbox" id="mobileSlider" checked>
+                            <label for="mobileSlider">Enable horizontal slider on mobile</label>
+                        </div>
+                        <div class="form-group">
+                            <label for="menuHandles">Menu Handles</label>
+                            <input type="text" id="menuHandles" value="main-menu">
+                            <p><small>Comma-separated menu handles. Use * as wildcard.</small></p>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
-            <!-- Settings form container -->
-            <div id="settings-form"></div>
+
+            <div class="sidebar">
+                <div class="card">
+                    <h3>Quick Tips</h3>
+                    <p>Use the main snippet <code>smart-breadcrumbs</code> for automatic page type detection.</p>
+                    <p>The app will automatically find the best path in your menu structure to create accurate breadcrumbs.</p>
+                    <p>Enable the mobile slider for better navigation on small screens.</p>
+                </div>
+            </div>
         </div>
-        
-        <!-- Toast container -->
-        <div id="toast" class="toast"></div>
     </div>
+
+    <script>
+        // Simple functionality to switch tabs
+        document.querySelectorAll('.tab').forEach((tab, index) => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+            });
+        });
+
+        // Simulating save
+        document.querySelector('.button').addEventListener('click', () => {
+            alert('Settings saved successfully!');
+        });
+    </script>
 </body>
 </html> 
