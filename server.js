@@ -109,7 +109,7 @@ app.get('/api/theme-settings', async (req, res) => {
 });
 
 // Serve static assets
-app.use(serveStatic(join(process.cwd(), 'web/frontend/build')));
+app.use(serveStatic(join(process.cwd(), 'public')));
 
 // Handle client-side routes
 app.use('/*', (req, res, next) => {
@@ -118,7 +118,7 @@ app.use('/*', (req, res, next) => {
     return;
   }
   // Serve the index.html for client-side routes
-  res.sendFile(join(process.cwd(), 'web/frontend/build/index.html'));
+  res.sendFile(join(process.cwd(), 'public/index.html'));
 });
 
 // Start server
