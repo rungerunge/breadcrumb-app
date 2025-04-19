@@ -1,49 +1,16 @@
 {% comment %}
     Smart Breadcrumbs - Main Snippet
-    Version: 2.1.5
-    Debug Mode: Enabled
+    Version: 2.1.6
+    Static Implementation
 {% endcomment %}
-
-{% assign debug = true %}
-{% if debug %}
-  <style>
-    .debug-info {
-      background: #f5f5f5;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      margin: 10px 0;
-      padding: 10px;
-      font-family: monospace;
-      font-size: 12px;
-    }
-    .debug-info pre {
-      margin: 0;
-      white-space: pre-wrap;
-    }
-  </style>
-  <div class="debug-info">
-    <pre>
-Template: {{ template | json }}
-Request Path: {{ request.path | json }}
-Collection: {{ collection | json }}
-Product: {{ product | json }}
-Current Tags: {{ current_tags | json }}
-Page Title: {{ page_title | json }}
-Shop: {{ shop.url | json }}
-    </pre>
-  </div>
-{% endif %}
 
 {%- style -%}
 .smart-breadcrumbs {
-    display: flex !important; /* Force display during development */
-    flex-wrap: wrap;
-    align-items: center;
-    padding: {{ settings.marginTop | default: 20 }}px 0 {{ settings.marginBottom | default: 20 }}px;
-    margin: 0;
-    list-style: none;
-    font-size: {{ settings.fontSize | default: 14 }}px;
-    background: {{ settings.background_color | default: 'transparent' }};
+    display: block;
+    margin: 1em 0;
+    padding: 0.5em 1em;
+    background: #f8f8f8;
+    border-radius: 4px;
 }
 
 .smart-breadcrumbs__list {
@@ -52,162 +19,85 @@ Shop: {{ shop.url | json }}
     padding: 0;
     margin: 0;
     list-style: none;
-    width: 100%;
 }
 
 .smart-breadcrumbs__item {
     display: flex;
     align-items: center;
-    white-space: nowrap;
 }
 
 .smart-breadcrumbs__link {
-    color: var(--breadcrumb-color, #666);
+    color: #666;
     text-decoration: none;
-    transition: color 0.2s ease;
-    opacity: 1 !important; /* Force visibility */
+    font-size: 0.9em;
 }
 
 .smart-breadcrumbs__link:hover {
-    color: var(--breadcrumb-hover-color, #000);
+    color: #000;
     text-decoration: underline;
 }
 
 .smart-breadcrumbs__separator {
-    margin: 0 8px;
-    color: var(--breadcrumb-separator-color, #999);
-    opacity: 1 !important; /* Force visibility */
+    margin: 0 0.5em;
+    color: #999;
 }
 
 .smart-breadcrumbs__current {
-    color: var(--breadcrumb-current-color, #333);
+    color: #333;
     font-weight: 500;
-    opacity: 1 !important; /* Force visibility */
-}
-
-{% if settings.customCssAll != blank %}
-{{ settings.customCssAll }}
-{% endif %}
-
-{% if settings.customCssLast != blank %}
-.smart-breadcrumbs__item:last-child {
-    {{ settings.customCssLast }}
-}
-{% endif %}
-
-{% if settings.customCssHover != blank %}
-.smart-breadcrumbs__link:hover {
-    {{ settings.customCssHover }}
-}
-{% endif %}
-
-@media screen and (min-width: 769px) {
-    {% if settings.customCssDesktop != blank %}
-    {{ settings.customCssDesktop }}
-    {% endif %}
+    font-size: 0.9em;
 }
 
 @media screen and (max-width: 768px) {
     .smart-breadcrumbs {
-        font-size: {{ settings.fontSize | minus: 2 | default: 12 }}px;
-        padding: 10px 0;
+        padding: 0.5em;
+        margin: 0.5em 0;
     }
-    
-    .smart-breadcrumbs__separator {
-        margin: 0 4px;
-    }
-    
-    {% if settings.customCssMobile != blank %}
-    {{ settings.customCssMobile }}
-    {% endif %}
 }
 {%- endstyle -%}
 
-<nav class="smart-breadcrumbs" aria-label="breadcrumb" style="display: block !important;">
+<nav class="smart-breadcrumbs" aria-label="breadcrumb">
   <ol class="smart-breadcrumbs__list">
-    {% comment %}Always show Home link{% endcomment %}
     <li class="smart-breadcrumbs__item">
       <a href="/" class="smart-breadcrumbs__link">Home</a>
-      <span class="smart-breadcrumbs__separator" aria-hidden="true">{{ settings.separator | default: '/' }}</span>
+      <span class="smart-breadcrumbs__separator" aria-hidden="true">/</span>
     </li>
 
     {% if template contains 'product' %}
-      {% comment %}Handle product pages with collection context{% endcomment %}
       {% if collection %}
         <li class="smart-breadcrumbs__item">
           <a href="{{ collection.url }}" class="smart-breadcrumbs__link">{{ collection.title }}</a>
-          <span class="smart-breadcrumbs__separator" aria-hidden="true">{{ settings.separator | default: '/' }}</span>
+          <span class="smart-breadcrumbs__separator" aria-hidden="true">/</span>
         </li>
-      {% elsif product.collections.size > 0 %}
-        {% assign primary_collection = product.collections.first %}
+      {% elsif product.collections.first %}
         <li class="smart-breadcrumbs__item">
-          <a href="{{ primary_collection.url }}" class="smart-breadcrumbs__link">{{ primary_collection.title }}</a>
-          <span class="smart-breadcrumbs__separator" aria-hidden="true">{{ settings.separator | default: '/' }}</span>
+          <a href="{{ product.collections.first.url }}" class="smart-breadcrumbs__link">{{ product.collections.first.title }}</a>
+          <span class="smart-breadcrumbs__separator" aria-hidden="true">/</span>
         </li>
       {% endif %}
       <li class="smart-breadcrumbs__item">
-        <span class="smart-breadcrumbs__current" aria-current="page">{{ product.title }}</span>
+        <span class="smart-breadcrumbs__current">{{ product.title }}</span>
       </li>
 
     {% elsif template contains 'collection' %}
-      {% comment %}Handle collection pages{% endcomment %}
       <li class="smart-breadcrumbs__item">
-        {% if current_tags %}
-          <a href="{{ collection.url }}" class="smart-breadcrumbs__link">{{ collection.title }}</a>
-          <span class="smart-breadcrumbs__separator" aria-hidden="true">{{ settings.separator | default: '/' }}</span>
-          <span class="smart-breadcrumbs__current" aria-current="page">{{ current_tags | join: " + " }}</span>
-        {% else %}
-          <span class="smart-breadcrumbs__current" aria-current="page">{{ collection.title }}</span>
-        {% endif %}
+        <span class="smart-breadcrumbs__current">{{ collection.title }}</span>
       </li>
 
     {% elsif template contains 'page' %}
-      {% comment %}Handle regular pages{% endcomment %}
       <li class="smart-breadcrumbs__item">
-        <span class="smart-breadcrumbs__current" aria-current="page">{{ page.title }}</span>
+        <span class="smart-breadcrumbs__current">{{ page.title }}</span>
       </li>
 
-    {% elsif template contains 'blog' %}
-      {% comment %}Handle blog pages{% endcomment %}
+    {% elsif template contains 'cart' %}
       <li class="smart-breadcrumbs__item">
-        {% if current_tags %}
-          <a href="{{ blog.url }}" class="smart-breadcrumbs__link">{{ blog.title }}</a>
-          <span class="smart-breadcrumbs__separator" aria-hidden="true">{{ settings.separator | default: '/' }}</span>
-          <span class="smart-breadcrumbs__current" aria-current="page">{{ current_tags | join: " + " }}</span>
-        {% else %}
-          <span class="smart-breadcrumbs__current" aria-current="page">{{ blog.title }}</span>
-        {% endif %}
-      </li>
-
-    {% elsif template contains 'article' %}
-      {% comment %}Handle blog articles{% endcomment %}
-      <li class="smart-breadcrumbs__item">
-        <a href="{{ blog.url }}" class="smart-breadcrumbs__link">{{ blog.title }}</a>
-        <span class="smart-breadcrumbs__separator" aria-hidden="true">{{ settings.separator | default: '/' }}</span>
-      </li>
-      <li class="smart-breadcrumbs__item">
-        <span class="smart-breadcrumbs__current" aria-current="page">{{ article.title }}</span>
+        <span class="smart-breadcrumbs__current">Shopping Cart</span>
       </li>
 
     {% else %}
-      {% comment %}Handle any other pages{% endcomment %}
       <li class="smart-breadcrumbs__item">
-        <span class="smart-breadcrumbs__current" aria-current="page">{{ page_title }}</span>
+        <span class="smart-breadcrumbs__current">{{ page_title }}</span>
       </li>
     {% endif %}
   </ol>
-</nav>
-
-{% comment %}Advanced debug information{% endcomment %}
-{% if debug %}
-  <script>
-    console.group('Smart Breadcrumbs Debug Info');
-    console.log('Template:', {{ template | json }});
-    console.log('Request Path:', {{ request.path | json }});
-    console.log('Collection:', {{ collection | json }});
-    console.log('Product:', {{ product | json }});
-    console.log('Current Tags:', {{ current_tags | json }});
-    console.log('Page Title:', {{ page_title | json }});
-    console.groupEnd();
-  </script>
-{% endif %} 
+</nav> 
