@@ -19,7 +19,7 @@ services:
       - key: PORT
         value: 10000
       - key: DB_PATH
-        value: /data/shopify.sqlite
+        value: /tmp/shopify.sqlite
     healthCheckPath: /health
     autoDeploy: true
     disk:

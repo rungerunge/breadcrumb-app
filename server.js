@@ -13,6 +13,7 @@ import { restResources } from '@shopify/shopify-api/rest/admin/2022-10';
 import { open } from 'sqlite';
 import sqlite3 from 'sqlite3';
 import fs from 'fs';
+import path from 'path';
 
 // Load environment variables
 dotenv.config();
@@ -70,9 +71,26 @@ debug.log('Environment loaded successfully');
 debug.log(`Server running in ${isDev ? 'development' : 'production'} mode`);
 debug.log(`HOST: ${HOST}`);
 
-// Database path - use mounted storage on Render
-const DB_PATH = isDev ? 'shopify.sqlite' : '/data/shopify.sqlite';
+// Database path handling - more robust for Render.com
+let DB_PATH;
+if (process.env.DB_PATH) {
+  DB_PATH = process.env.DB_PATH;
+} else {
+  const dataDir = isDev ? '.' : '/tmp'; // Fallback to /tmp on Render.com
+  DB_PATH = path.join(dataDir, 'shopify.sqlite');
+}
 debug.log(`Using database at ${DB_PATH}`);
+
+// Create the database directory if it doesn't exist
+const dbDir = path.dirname(DB_PATH);
+try {
+  if (!fs.existsSync(dbDir)) {
+    debug.log(`Creating database directory: ${dbDir}`);
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
+} catch (error) {
+  debug.error(`Error creating database directory: ${error.message}`);
+}
 
 // Database initialization with better error handling
 let db;
@@ -80,6 +98,18 @@ let db;
 const initDatabase = async () => {
   try {
     debug.log('Initializing database connection...');
+    
+    // For Render.com - check if we can write to the specified directory
+    try {
+      const testFile = path.join(dbDir, '.test-write');
+      fs.writeFileSync(testFile, 'test');
+      fs.unlinkSync(testFile);
+      debug.log(`Successfully verified write access to ${dbDir}`);
+    } catch (error) {
+      debug.error(`Cannot write to ${dbDir}, falling back to /tmp: ${error.message}`);
+      DB_PATH = '/tmp/shopify.sqlite';
+    }
+    
     db = await open({
       filename: DB_PATH,
       driver: sqlite3.Database
@@ -292,6 +322,7 @@ app.get('*', (req, res) => {
       console.log(`==> Your service is live 🚀`);
       console.log(`==> Health check available at http://localhost:${PORT}/health`);
       console.log(`==> App is running at ${HOST}`);
+      console.log(`==> Database path: ${DB_PATH}`);
     });
   } catch (error) {
     debug.error('Error starting server:', error);
