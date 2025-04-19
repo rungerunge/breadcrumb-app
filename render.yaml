@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: smart-breadcrumbs
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SHOPIFY_API_KEY
+        sync: false
+      - key: SHOPIFY_API_SECRET
+        sync: false
+      - key: HOST
+        sync: false
+      - key: SCOPES
+        value: read_themes,write_themes,read_products,read_content
+    healthCheckPath: /health
+    autoDeploy: true
+    disk:
+      name: sqlite-data
+      mountPath: /data
+      sizeGB: 1 
