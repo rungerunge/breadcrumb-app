@@ -1,9 +1,9 @@
 {% comment %}
     Smart Breadcrumbs - Main Snippet
-    Version: 2.1.2
+    Version: 2.1.4
     
-    This snippet generates breadcrumbs based on your Shopify navigation menus.
-    It examines your menu structure to find the current page and builds a breadcrumb path.
+    This snippet generates breadcrumbs based on your Shopify navigation menus
+    and handles product pages with proper collection context.
 {% endcomment %}
 
 {%- style -%}
@@ -19,21 +19,11 @@
 
 .smart-breadcrumbs__list {
     display: flex;
-    {% if settings.mobileSlider %}
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    {% else %}
     flex-wrap: wrap;
-    {% endif %}
     padding: 0;
     margin: 0;
     list-style: none;
-}
-
-.smart-breadcrumbs__list::-webkit-scrollbar {
-    display: none;
+    width: 100%;
 }
 
 .smart-breadcrumbs__item {
@@ -87,6 +77,7 @@
 @media screen and (max-width: 768px) {
     .smart-breadcrumbs {
         font-size: {{ settings.fontSize | minus: 2 | default: 12 }}px;
+        padding: 10px 0;
     }
     
     .smart-breadcrumbs__separator {
@@ -99,207 +90,88 @@
 }
 {%- endstyle -%}
 
-{% liquid
-  # Initialize variables
-  assign found_breadcrumbs = false
-  assign current_url = canonical_url | default: request.path
-  assign menu_handles = settings.menuHandles | default: 'main-menu'
-  assign handle_list = menu_handles | strip | split: ','
-  
-  # Initialize breadcrumb path
-  assign breadcrumb_path = ''
-  
-  # Special handling for products to ensure collection context
-  if template contains 'product'
-    # First try to get collection from URL
-    assign collection_handle = current_url | split: '/collections/' | last | split: '/products/' | first
-    assign current_collection = collections[collection_handle]
-    
-    # If no collection in URL, check if product belongs to the collection in navigation
-    if current_collection == blank and product.collections.size > 0
-      # Loop through all menus to find the collection
-      for handle in handle_list
-        assign menu = linklists[handle | strip]
-        if menu != blank
-          for link in menu.links
-            # Check if this menu item is a collection and matches one of the product's collections
-            assign link_handle = link.url | split: '/collections/' | last
-            for collection in product.collections
-              if collection.handle == link_handle or link.url contains collection.url
-                assign current_collection = collection
-                assign found_breadcrumbs = true
-                assign breadcrumb_path = breadcrumb_path | append: 'Home|/,' | append: link.title | append: '|' | append: link.url | append: ',' | append: product.title | append: '|' | append: product.url
-                break
-              endif
-            endfor
-            
-            if found_breadcrumbs
-              break
-            endif
-            
-            # Check child links if not found at top level
-            for child_link in link.links
-              assign child_handle = child_link.url | split: '/collections/' | last
-              for collection in product.collections
-                if collection.handle == child_handle or child_link.url contains collection.url
-                  assign current_collection = collection
-                  assign found_breadcrumbs = true
-                  assign breadcrumb_path = breadcrumb_path | append: 'Home|/,' | append: link.title | append: '|' | append: link.url | append: ',' | append: child_link.title | append: '|' | append: child_link.url | append: ',' | append: product.title | append: '|' | append: product.url
-                  break
-                endif
-              endfor
-              
-              if found_breadcrumbs
-                break
-              endif
-            endfor
-            
-            if found_breadcrumbs
-              break
-            endif
-          endfor
-        endif
-        
-        if found_breadcrumbs
-          break
-        endif
-      endfor
-    endif
-  endif
-  
-  # If no breadcrumbs found yet, try regular menu traversal
-  if found_breadcrumbs == false
-    for handle in handle_list
-      assign menu_handle = handle | strip
-      assign menu = linklists[menu_handle]
-      
-      if menu != blank
-        # Level 1: Check top-level menu items
-        for link in menu.links
-          assign link_url_normalized = link.url | replace: 'https://', '' | replace: 'http://', ''
-          assign current_url_normalized = current_url | replace: 'https://', '' | replace: 'http://', ''
-          
-          if link_url_normalized == current_url_normalized or current_url contains link.url
-            assign found_breadcrumbs = true
-            assign breadcrumb_path = breadcrumb_path | append: 'Home|/,' | append: link.title | append: '|' | append: link.url
-            break
-          endif
-          
-          # Level 2: Check child links
-          for child_link in link.links
-            assign child_link_url_normalized = child_link.url | replace: 'https://', '' | replace: 'http://', ''
-            
-            if child_link_url_normalized == current_url_normalized or current_url contains child_link.url
-              assign found_breadcrumbs = true
-              assign breadcrumb_path = breadcrumb_path | append: 'Home|/,' | append: link.title | append: '|' | append: link.url | append: ',' | append: child_link.title | append: '|' | append: child_link.url
-              break
-            endif
-          endfor
-          
-          if found_breadcrumbs
-            break
-          endif
-        endfor
-      endif
-      
-      if found_breadcrumbs
-        break
-      endif
-    endfor
-  endif
-%}
-
 <nav class="smart-breadcrumbs" aria-label="breadcrumb">
   <ol class="smart-breadcrumbs__list">
-    {% if found_breadcrumbs %}
-      {% comment %} Display breadcrumbs from menu structure {% endcomment %}
-      {% assign crumb_items = breadcrumb_path | split: ',' %}
-      {% for crumb in crumb_items %}
-        {% if crumb != blank %}
-          {% assign crumb_parts = crumb | split: '|' %}
-          {% assign crumb_title = crumb_parts[0] %}
-          {% assign crumb_url = crumb_parts[1] %}
-          
-          {% if forloop.last %}
-            <li class="smart-breadcrumbs__item">
-              <span class="smart-breadcrumbs__current" aria-current="page">{{ crumb_title }}</span>
-            </li>
-          {% else %}
-            <li class="smart-breadcrumbs__item">
-              <a href="{{ crumb_url }}" class="smart-breadcrumbs__link">{{ crumb_title }}</a>
-              <span class="smart-breadcrumbs__separator" aria-hidden="true">{{ settings.separator | default: '/' }}</span>
-            </li>
-          {% endif %}
-        {% endif %}
-      {% endfor %}
-    {% else %}
-      {% comment %} Enhanced fallback breadcrumbs with better collection handling {% endcomment %}
-      <li class="smart-breadcrumbs__item">
-        <a href="/" class="smart-breadcrumbs__link">{{ 'general.breadcrumbs.home' | t }}</a>
-        <span class="smart-breadcrumbs__separator" aria-hidden="true">{{ settings.separator | default: '/' }}</span>
-      </li>
-      
-      {% if template contains 'product' %}
-        {% comment %} Product page: Home > Collection > Product {% endcomment %}
-        {% if current_collection %}
-          <li class="smart-breadcrumbs__item">
-            <a href="{{ current_collection.url }}" class="smart-breadcrumbs__link">{{ current_collection.title }}</a>
-            <span class="smart-breadcrumbs__separator" aria-hidden="true">{{ settings.separator | default: '/' }}</span>
-          </li>
-        {% elsif product.collections.size > 0 %}
-          <li class="smart-breadcrumbs__item">
-            <a href="{{ product.collections.first.url }}" class="smart-breadcrumbs__link">{{ product.collections.first.title }}</a>
-            <span class="smart-breadcrumbs__separator" aria-hidden="true">{{ settings.separator | default: '/' }}</span>
-          </li>
-        {% endif %}
-        
+    {% comment %}Always show Home link{% endcomment %}
+    <li class="smart-breadcrumbs__item">
+      <a href="/" class="smart-breadcrumbs__link">Home</a>
+      <span class="smart-breadcrumbs__separator" aria-hidden="true">{{ settings.separator | default: '/' }}</span>
+    </li>
+
+    {% if template contains 'product' %}
+      {% comment %}Handle product pages with collection context{% endcomment %}
+      {% if collection %}
         <li class="smart-breadcrumbs__item">
-          <span class="smart-breadcrumbs__current" aria-current="page">{{ product.title }}</span>
-        </li>
-      {% elsif template contains 'collection' and collection.handle != 'all' %}
-        {% comment %} Collection page: Home > Collection {% endcomment %}
-        <li class="smart-breadcrumbs__item">
-          <span class="smart-breadcrumbs__current" aria-current="page">{{ collection.title }}</span>
-        </li>
-      {% elsif template contains 'page' %}
-        {% comment %} Page: Home > Page {% endcomment %}
-        <li class="smart-breadcrumbs__item">
-          <span class="smart-breadcrumbs__current" aria-current="page">{{ page.title }}</span>
-        </li>
-      {% elsif template contains 'blog' %}
-        {% comment %} Blog: Home > Blog {% endcomment %}
-        <li class="smart-breadcrumbs__item">
-          <span class="smart-breadcrumbs__current" aria-current="page">{{ blog.title }}</span>
-        </li>
-      {% elsif template contains 'article' %}
-        {% comment %} Article: Home > Blog > Article {% endcomment %}
-        <li class="smart-breadcrumbs__item">
-          <a href="{{ blog.url }}" class="smart-breadcrumbs__link">{{ blog.title }}</a>
+          <a href="{{ collection.url }}" class="smart-breadcrumbs__link">{{ collection.title }}</a>
           <span class="smart-breadcrumbs__separator" aria-hidden="true">{{ settings.separator | default: '/' }}</span>
         </li>
+      {% elsif product.collections.size > 0 %}
+        {% assign primary_collection = product.collections.first %}
         <li class="smart-breadcrumbs__item">
-          <span class="smart-breadcrumbs__current" aria-current="page">{{ article.title }}</span>
-        </li>
-      {% elsif template contains 'search' %}
-        {% comment %} Search: Home > Search {% endcomment %}
-        <li class="smart-breadcrumbs__item">
-          <span class="smart-breadcrumbs__current" aria-current="page">{{ 'general.breadcrumbs.search' | t }}</span>
+          <a href="{{ primary_collection.url }}" class="smart-breadcrumbs__link">{{ primary_collection.title }}</a>
+          <span class="smart-breadcrumbs__separator" aria-hidden="true">{{ settings.separator | default: '/' }}</span>
         </li>
       {% endif %}
+      <li class="smart-breadcrumbs__item">
+        <span class="smart-breadcrumbs__current" aria-current="page">{{ product.title }}</span>
+      </li>
+
+    {% elsif template contains 'collection' %}
+      {% comment %}Handle collection pages{% endcomment %}
+      <li class="smart-breadcrumbs__item">
+        {% if current_tags %}
+          <a href="{{ collection.url }}" class="smart-breadcrumbs__link">{{ collection.title }}</a>
+          <span class="smart-breadcrumbs__separator" aria-hidden="true">{{ settings.separator | default: '/' }}</span>
+          <span class="smart-breadcrumbs__current" aria-current="page">{{ current_tags | join: " + " }}</span>
+        {% else %}
+          <span class="smart-breadcrumbs__current" aria-current="page">{{ collection.title }}</span>
+        {% endif %}
+      </li>
+
+    {% elsif template contains 'page' %}
+      {% comment %}Handle regular pages{% endcomment %}
+      <li class="smart-breadcrumbs__item">
+        <span class="smart-breadcrumbs__current" aria-current="page">{{ page.title }}</span>
+      </li>
+
+    {% elsif template contains 'blog' %}
+      {% comment %}Handle blog pages{% endcomment %}
+      <li class="smart-breadcrumbs__item">
+        {% if current_tags %}
+          <a href="{{ blog.url }}" class="smart-breadcrumbs__link">{{ blog.title }}</a>
+          <span class="smart-breadcrumbs__separator" aria-hidden="true">{{ settings.separator | default: '/' }}</span>
+          <span class="smart-breadcrumbs__current" aria-current="page">{{ current_tags | join: " + " }}</span>
+        {% else %}
+          <span class="smart-breadcrumbs__current" aria-current="page">{{ blog.title }}</span>
+        {% endif %}
+      </li>
+
+    {% elsif template contains 'article' %}
+      {% comment %}Handle blog articles{% endcomment %}
+      <li class="smart-breadcrumbs__item">
+        <a href="{{ blog.url }}" class="smart-breadcrumbs__link">{{ blog.title }}</a>
+        <span class="smart-breadcrumbs__separator" aria-hidden="true">{{ settings.separator | default: '/' }}</span>
+      </li>
+      <li class="smart-breadcrumbs__item">
+        <span class="smart-breadcrumbs__current" aria-current="page">{{ article.title }}</span>
+      </li>
+
+    {% else %}
+      {% comment %}Handle any other pages{% endcomment %}
+      <li class="smart-breadcrumbs__item">
+        <span class="smart-breadcrumbs__current" aria-current="page">{{ page_title }}</span>
+      </li>
     {% endif %}
   </ol>
 </nav>
 
-{% comment %} Debug information (hidden in production) {% endcomment %}
+{% comment %}Debug information (hidden in production){% endcomment %}
 {% if settings.debug_mode %}
   <div style="display: none;">
     <p>Debug Information:</p>
-    <p>Current URL: {{ current_url }}</p>
     <p>Template: {{ template }}</p>
-    <p>Menu Handles: {{ menu_handles }}</p>
-    <p>Found in Menus: {{ found_breadcrumbs }}</p>
-    <p>Current Collection: {{ current_collection.title }}</p>
+    <p>Collection: {{ collection.title }}</p>
     <p>Product Collections: {{ product.collections | map: 'title' | join: ', ' }}</p>
-    <p>Breadcrumb Path: {{ breadcrumb_path }}</p>
+    <p>Current Tags: {{ current_tags | join: ', ' }}</p>
   </div>
 {% endif %} 
