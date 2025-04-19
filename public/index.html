@@ -10,6 +10,38 @@
         // Check if we're in a Shopify iframe
         const isShopifyIframe = window.top !== window.self;
         
+        function getShopOrigin() {
+            // Check URL params first
+            const params = new URLSearchParams(window.location.search);
+            const shop = params.get('shop');
+            if (shop) return shop;
+
+            // If no shop in URL, try to get from hostname for embedded apps
+            if (isShopifyIframe) {
+                const hostName = window.location.ancestorOrigins?.[0] || 
+                               document.referrer;
+                if (hostName) {
+                    const url = new URL(hostName);
+                    return url.hostname;
+                }
+            }
+            return null;
+        }
+
+        function redirectToAuth() {
+            const shop = getShopOrigin();
+            if (shop) {
+                const redirectUrl = `/api/auth?shop=${shop}`;
+                if (isShopifyIframe) {
+                    window.top.location.href = redirectUrl;
+                } else {
+                    window.location.href = redirectUrl;
+                }
+            } else {
+                showToast('No shop found to authenticate', true);
+            }
+        }
+
         async function loadSettings() {
             try {
                 const response = await fetch('/api/settings');
@@ -54,7 +86,12 @@
                 }
             } catch (error) {
                 console.error('Error loading settings:', error);
-                showToast('Error loading settings', true);
+                if (error.name === 'TypeError' || (error.response && error.response.status === 401)) {
+                    // If we get an authentication error, redirect to auth
+                    redirectToAuth();
+                } else {
+                    showToast('Error loading settings', true);
+                }
             }
         }
 
@@ -123,20 +160,14 @@
         }
 
         window.addEventListener('load', function() {
-            // If we're not in the auth process (no auth query params)
-            if (!window.location.search.includes('hmac=') && !window.location.search.includes('shop=')) {
-                // Get the shop parameter from the URL if it exists
-                const urlParams = new URLSearchParams(window.location.search);
-                const shop = urlParams.get('shop');
-                
-                // If we have a shop parameter, redirect to auth
-                if (shop) {
-                    window.location.href = `/api/auth?shop=${shop}`;
+            // Try to load settings first
+            loadSettings().catch(error => {
+                console.error('Failed to load settings:', error);
+                // If loading fails, check if we need to authenticate
+                if (!window.location.search.includes('hmac=')) {
+                    redirectToAuth();
                 }
-            } else {
-                // If we're authenticated, load settings
-                loadSettings();
-            }
+            });
         });
     </script>
 </head>
