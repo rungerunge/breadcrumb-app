@@ -6,9 +6,9 @@ body {
 }
 
 .app-container {
-    max-width: 800px;
-    margin: 40px auto;
-    padding: 20px;
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 0 20px;
 }
 
 #loading-container {
@@ -16,6 +16,7 @@ body {
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     text-align: center;
+    padding: 40px;
 }
 
 h1 {
@@ -80,27 +81,73 @@ p {
     margin-bottom: 20px;
 }
 
+.Polaris-Card__Header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #dfe3e8;
+}
+
+.Polaris-Card__Section {
+    padding: 20px;
+}
+
 .Polaris-FormLayout__Item {
     margin-bottom: 20px;
 }
 
-.Polaris-TextField__Input {
-    width: 100%;
-    max-width: 300px;
+.setting-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .Polaris-Choice {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
+}
+
+.Polaris-TextField__Input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #c4cdd5;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #212b36;
+}
+
+textarea.Polaris-TextField__Input {
+    min-height: 100px;
+    font-family: monospace;
+}
+
+.Polaris-ButtonGroup {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.Polaris-Button {
+    background-color: #f4f6f8;
+    border: 1px solid #c4cdd5;
+    border-radius: 4px;
+    color: #212b36;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1;
+    padding: 8px 16px;
+    text-align: center;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.Polaris-Button:hover {
+    background-color: #f9fafb;
 }
 
 .Polaris-Button--primary {
     background-color: #008060;
-    color: white;
     border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 500;
+    color: white;
 }
 
 .Polaris-Button--primary:hover {
@@ -110,4 +157,25 @@ p {
 .Polaris-Button--primary:disabled {
     background-color: #f1f1f1;
     cursor: not-allowed;
+}
+
+.Polaris-Heading {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+    margin: 0;
+}
+
+.Polaris-Label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #212b36;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.Polaris-Labelled__HelpText {
+    font-size: 12px;
+    color: #637381;
+    margin-top: 4px;
 } 

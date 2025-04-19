@@ -1,0 +1,147 @@
+{%- comment -%}
+SmartBreadcrumbs App Block
+{%- endcomment -%}
+
+{%- liquid
+  assign font_size = block.settings.font_size | default: '14'
+  assign use_slider = block.settings.use_slider
+  assign margin_top = block.settings.margin_top | default: '0'
+  assign margin_bottom = block.settings.margin_bottom | default: '0'
+  assign separator = block.settings.separator | default: '>'
+  assign custom_css = block.settings.custom_css
+  assign mobile_css = block.settings.mobile_css
+  assign last_item_css = block.settings.last_item_css
+  assign hover_css = block.settings.hover_css
+  assign menu_handles = block.settings.menu_handles | default: '*'
+-%}
+
+<style>
+  #smart-breadcrumbs-{{ block.id }} {
+    font-size: {{ font_size }}px;
+    margin-top: {{ margin_top }}px;
+    margin-bottom: {{ margin_bottom }}px;
+    {{ custom_css }}
+  }
+  
+  #smart-breadcrumbs-{{ block.id }} .breadcrumb-item:last-child {
+    {{ last_item_css }}
+  }
+  
+  #smart-breadcrumbs-{{ block.id }} .breadcrumb-item:hover {
+    {{ hover_css }}
+  }
+  
+  @media screen and (max-width: 749px) {
+    #smart-breadcrumbs-{{ block.id }} {
+      {% if use_slider %}
+      overflow-x: auto;
+      white-space: nowrap;
+      -webkit-overflow-scrolling: touch;
+      {% endif %}
+      {{ mobile_css }}
+    }
+  }
+</style>
+
+<nav id="smart-breadcrumbs-{{ block.id }}" class="smart-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+  <ol class="breadcrumb-list">
+    {%- if request.page_type == 'product' -%}
+      {%- render 'smart-breadcrumbs-product', 
+        product: product,
+        collection: collection,
+        menu_handles: menu_handles,
+        separator: separator
+      -%}
+    {%- elsif request.page_type == 'collection' -%}
+      {%- render 'smart-breadcrumbs-collection',
+        collection: collection,
+        menu_handles: menu_handles,
+        separator: separator
+      -%}
+    {%- endif -%}
+  </ol>
+</nav>
+
+{% schema %}
+{
+  "name": "Smart Breadcrumbs",
+  "target": "section",
+  "settings": [
+    {
+      "type": "range",
+      "id": "font_size",
+      "min": 10,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Font Size",
+      "default": 14
+    },
+    {
+      "type": "checkbox",
+      "id": "use_slider",
+      "label": "Use Slider on Mobile",
+      "info": "Enable horizontal scrolling on mobile devices",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "margin_top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "label": "Margin Top",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "margin_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "label": "Margin Bottom",
+      "default": 0
+    },
+    {
+      "type": "text",
+      "id": "separator",
+      "label": "Breadcrumb Separator",
+      "info": "HTML is allowed (e.g. <span>/</span>)",
+      "default": ">"
+    },
+    {
+      "type": "textarea",
+      "id": "custom_css",
+      "label": "Custom CSS",
+      "info": "Custom CSS for desktop/tablet view"
+    },
+    {
+      "type": "textarea",
+      "id": "mobile_css",
+      "label": "Mobile CSS",
+      "info": "Custom CSS for mobile view"
+    },
+    {
+      "type": "textarea",
+      "id": "last_item_css",
+      "label": "Last Item CSS",
+      "info": "Custom CSS for the last breadcrumb"
+    },
+    {
+      "type": "textarea",
+      "id": "hover_css",
+      "label": "Hover CSS",
+      "info": "Custom CSS for breadcrumb hover state"
+    },
+    {
+      "type": "text",
+      "id": "menu_handles",
+      "label": "Menu Handles",
+      "info": "Comma-separated menu handles (use * for all)",
+      "default": "*"
+    }
+  ]
+}
+{% endschema %} 

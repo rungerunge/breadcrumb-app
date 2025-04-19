@@ -15,14 +15,46 @@
                 const response = await fetch('/api/settings');
                 if (response.ok) {
                     const settings = await response.json();
+                    // Font Size
+                    document.getElementById('fontSize').value = settings.fontSize || '14';
+                    document.getElementById('fontSizeEnabled').checked = settings.fontSizeEnabled || false;
+                    
+                    // Mobile Slider
+                    document.getElementById('useSlider').checked = settings.useSlider || false;
+                    document.getElementById('useSliderEnabled').checked = settings.useSliderEnabled || false;
+                    
+                    // Margins
+                    document.getElementById('marginTop').value = settings.marginTop || '0';
+                    document.getElementById('marginTopEnabled').checked = settings.marginTopEnabled || false;
+                    document.getElementById('marginBottom').value = settings.marginBottom || '0';
+                    document.getElementById('marginBottomEnabled').checked = settings.marginBottomEnabled || false;
+                    
+                    // Separator
                     document.getElementById('separator').value = settings.separator || '>';
-                    document.getElementById('showHome').checked = settings.showHome !== false;
-                    document.getElementById('customHomeText').value = settings.customHomeText || 'Home';
+                    document.getElementById('separatorEnabled').checked = settings.separatorEnabled || false;
+                    
+                    // CSS Fields
+                    document.getElementById('desktopCSS').value = settings.desktopCSS || '';
+                    document.getElementById('desktopCSSEnabled').checked = settings.desktopCSSEnabled || false;
+                    document.getElementById('mobileCSS').value = settings.mobileCSS || '';
+                    document.getElementById('mobileCSSEnabled').checked = settings.mobileCSSEnabled || false;
+                    document.getElementById('allBreadcrumbsCSS').value = settings.allBreadcrumbsCSS || '';
+                    document.getElementById('allBreadcrumbsCSSEnabled').checked = settings.allBreadcrumbsCSSEnabled || false;
+                    document.getElementById('lastBreadcrumbCSS').value = settings.lastBreadcrumbCSS || '';
+                    document.getElementById('lastBreadcrumbCSSEnabled').checked = settings.lastBreadcrumbCSSEnabled || false;
+                    document.getElementById('hoverCSS').value = settings.hoverCSS || '';
+                    document.getElementById('hoverCSSEnabled').checked = settings.hoverCSSEnabled || false;
+                    
+                    // Menu Handles
+                    document.getElementById('menuHandles').value = settings.menuHandles || '*';
+                    document.getElementById('menuHandlesEnabled').checked = settings.menuHandlesEnabled || false;
+
                     document.getElementById('settings-container').style.display = 'block';
                     document.getElementById('loading-container').style.display = 'none';
                 }
             } catch (error) {
                 console.error('Error loading settings:', error);
+                showToast('Error loading settings', true);
             }
         }
 
@@ -34,9 +66,28 @@
 
             try {
                 const settings = {
+                    fontSize: document.getElementById('fontSize').value,
+                    fontSizeEnabled: document.getElementById('fontSizeEnabled').checked,
+                    useSlider: document.getElementById('useSlider').checked,
+                    useSliderEnabled: document.getElementById('useSliderEnabled').checked,
+                    marginTop: document.getElementById('marginTop').value,
+                    marginTopEnabled: document.getElementById('marginTopEnabled').checked,
+                    marginBottom: document.getElementById('marginBottom').value,
+                    marginBottomEnabled: document.getElementById('marginBottomEnabled').checked,
                     separator: document.getElementById('separator').value,
-                    showHome: document.getElementById('showHome').checked,
-                    customHomeText: document.getElementById('customHomeText').value
+                    separatorEnabled: document.getElementById('separatorEnabled').checked,
+                    desktopCSS: document.getElementById('desktopCSS').value,
+                    desktopCSSEnabled: document.getElementById('desktopCSSEnabled').checked,
+                    mobileCSS: document.getElementById('mobileCSS').value,
+                    mobileCSSEnabled: document.getElementById('mobileCSSEnabled').checked,
+                    allBreadcrumbsCSS: document.getElementById('allBreadcrumbsCSS').value,
+                    allBreadcrumbsCSSEnabled: document.getElementById('allBreadcrumbsCSSEnabled').checked,
+                    lastBreadcrumbCSS: document.getElementById('lastBreadcrumbCSS').value,
+                    lastBreadcrumbCSSEnabled: document.getElementById('lastBreadcrumbCSSEnabled').checked,
+                    hoverCSS: document.getElementById('hoverCSS').value,
+                    hoverCSSEnabled: document.getElementById('hoverCSSEnabled').checked,
+                    menuHandles: document.getElementById('menuHandles').value,
+                    menuHandlesEnabled: document.getElementById('menuHandlesEnabled').checked
                 };
 
                 const response = await fetch('/api/settings', {
@@ -102,43 +153,217 @@
                 <div class="Polaris-Page-Header Polaris-Page-Header--separator">
                     <h1 class="Polaris-Header-Title">SmartBreadcrumbs Settings</h1>
                 </div>
-                
+
                 <div class="Polaris-Layout">
                     <div class="Polaris-Layout__Section">
+                        <!-- Help Section -->
                         <div class="Polaris-Card">
                             <div class="Polaris-Card__Section">
+                                <h2>Instructions</h2>
+                                <p>1. Place and configure the "SmartBreadcrumbs" app block in your theme editor.</p>
+                                <p>2. Check the breadcrumb path on your product pages.</p>
+                                <p>3. (Optional) Use global settings below to override individual block settings.</p>
+                                <div class="Polaris-ButtonGroup">
+                                    <button class="Polaris-Button" onclick="window.open('https://www.youtube.com/watch?v=tutorial', '_blank')">
+                                        <span class="Polaris-Button__Content">Watch Tutorial</span>
+                                    </button>
+                                    <button class="Polaris-Button" onclick="window.open('/faq', '_blank')">
+                                        <span class="Polaris-Button__Content">Open FAQ</span>
+                                    </button>
+                                    <button class="Polaris-Button" onclick="window.location.href='mailto:support@example.com'">
+                                        <span class="Polaris-Button__Content">Email Support</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Basic Settings -->
+                        <div class="Polaris-Card">
+                            <div class="Polaris-Card__Header">
+                                <h2 class="Polaris-Heading">Basic Settings</h2>
+                            </div>
+                            <div class="Polaris-Card__Section">
                                 <div class="Polaris-FormLayout">
+                                    <!-- Font Size -->
                                     <div class="Polaris-FormLayout__Item">
-                                        <div class="Polaris-Labelled__LabelWrapper">
-                                            <label class="Polaris-Label">Separator</label>
+                                        <div class="setting-row">
+                                            <label class="Polaris-Choice" for="fontSizeEnabled">
+                                                <input type="checkbox" id="fontSizeEnabled" class="Polaris-Checkbox__Input" />
+                                                <span class="Polaris-Choice__Label">Enable Global Font Size</span>
+                                            </label>
+                                            <div class="Polaris-Labelled__LabelWrapper">
+                                                <label class="Polaris-Label">Font Size (px)</label>
+                                            </div>
+                                            <input type="number" id="fontSize" class="Polaris-TextField__Input" value="14" />
                                         </div>
-                                        <input id="separator" class="Polaris-TextField__Input" type="text" value=">" />
-                                        <div class="Polaris-Labelled__HelpText">
-                                            The symbol used to separate breadcrumb items
+                                    </div>
+
+                                    <!-- Mobile Slider -->
+                                    <div class="Polaris-FormLayout__Item">
+                                        <div class="setting-row">
+                                            <label class="Polaris-Choice" for="useSliderEnabled">
+                                                <input type="checkbox" id="useSliderEnabled" class="Polaris-Checkbox__Input" />
+                                                <span class="Polaris-Choice__Label">Enable Global Mobile Slider</span>
+                                            </label>
+                                            <label class="Polaris-Choice" for="useSlider">
+                                                <input type="checkbox" id="useSlider" class="Polaris-Checkbox__Input" />
+                                                <span class="Polaris-Choice__Label">Use Slider on Mobile</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Margins -->
+                                    <div class="Polaris-FormLayout__Item">
+                                        <div class="setting-row">
+                                            <label class="Polaris-Choice" for="marginTopEnabled">
+                                                <input type="checkbox" id="marginTopEnabled" class="Polaris-Checkbox__Input" />
+                                                <span class="Polaris-Choice__Label">Enable Global Top Margin</span>
+                                            </label>
+                                            <div class="Polaris-Labelled__LabelWrapper">
+                                                <label class="Polaris-Label">Margin Top (px)</label>
+                                            </div>
+                                            <input type="number" id="marginTop" class="Polaris-TextField__Input" value="0" />
                                         </div>
                                     </div>
 
                                     <div class="Polaris-FormLayout__Item">
-                                        <label class="Polaris-Choice" for="showHome">
-                                            <input type="checkbox" id="showHome" class="Polaris-Checkbox__Input" checked />
-                                            <span class="Polaris-Choice__Label">Show Home Link</span>
-                                        </label>
-                                        <div class="Polaris-Labelled__HelpText">
-                                            Display a link to the home page at the start of the breadcrumb
+                                        <div class="setting-row">
+                                            <label class="Polaris-Choice" for="marginBottomEnabled">
+                                                <input type="checkbox" id="marginBottomEnabled" class="Polaris-Checkbox__Input" />
+                                                <span class="Polaris-Choice__Label">Enable Global Bottom Margin</span>
+                                            </label>
+                                            <div class="Polaris-Labelled__LabelWrapper">
+                                                <label class="Polaris-Label">Margin Bottom (px)</label>
+                                            </div>
+                                            <input type="number" id="marginBottom" class="Polaris-TextField__Input" value="0" />
                                         </div>
                                     </div>
 
+                                    <!-- Separator -->
                                     <div class="Polaris-FormLayout__Item">
-                                        <div class="Polaris-Labelled__LabelWrapper">
-                                            <label class="Polaris-Label">Home Link Text</label>
-                                        </div>
-                                        <input id="customHomeText" class="Polaris-TextField__Input" type="text" value="Home" />
-                                        <div class="Polaris-Labelled__HelpText">
-                                            The text to display for the home link
+                                        <div class="setting-row">
+                                            <label class="Polaris-Choice" for="separatorEnabled">
+                                                <input type="checkbox" id="separatorEnabled" class="Polaris-Checkbox__Input" />
+                                                <span class="Polaris-Choice__Label">Enable Global Separator</span>
+                                            </label>
+                                            <div class="Polaris-Labelled__LabelWrapper">
+                                                <label class="Polaris-Label">Breadcrumb Separator (HTML)</label>
+                                            </div>
+                                            <input type="text" id="separator" class="Polaris-TextField__Input" value=">" />
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- CSS Customization -->
+                        <div class="Polaris-Card">
+                            <div class="Polaris-Card__Header">
+                                <h2 class="Polaris-Heading">CSS Customization</h2>
+                            </div>
+                            <div class="Polaris-Card__Section">
+                                <div class="Polaris-FormLayout">
+                                    <!-- Desktop/Tablet CSS -->
+                                    <div class="Polaris-FormLayout__Item">
+                                        <div class="setting-row">
+                                            <label class="Polaris-Choice" for="desktopCSSEnabled">
+                                                <input type="checkbox" id="desktopCSSEnabled" class="Polaris-Checkbox__Input" />
+                                                <span class="Polaris-Choice__Label">Enable Global Desktop/Tablet CSS</span>
+                                            </label>
+                                            <div class="Polaris-Labelled__LabelWrapper">
+                                                <label class="Polaris-Label">Desktop/Tablet CSS</label>
+                                            </div>
+                                            <textarea id="desktopCSS" class="Polaris-TextField__Input" rows="4"></textarea>
+                                        </div>
+                                    </div>
+
+                                    <!-- Mobile CSS -->
+                                    <div class="Polaris-FormLayout__Item">
+                                        <div class="setting-row">
+                                            <label class="Polaris-Choice" for="mobileCSSEnabled">
+                                                <input type="checkbox" id="mobileCSSEnabled" class="Polaris-Checkbox__Input" />
+                                                <span class="Polaris-Choice__Label">Enable Global Mobile CSS</span>
+                                            </label>
+                                            <div class="Polaris-Labelled__LabelWrapper">
+                                                <label class="Polaris-Label">Mobile CSS</label>
+                                            </div>
+                                            <textarea id="mobileCSS" class="Polaris-TextField__Input" rows="4"></textarea>
+                                        </div>
+                                    </div>
+
+                                    <!-- All Breadcrumbs CSS -->
+                                    <div class="Polaris-FormLayout__Item">
+                                        <div class="setting-row">
+                                            <label class="Polaris-Choice" for="allBreadcrumbsCSSEnabled">
+                                                <input type="checkbox" id="allBreadcrumbsCSSEnabled" class="Polaris-Checkbox__Input" />
+                                                <span class="Polaris-Choice__Label">Enable Global All Breadcrumbs CSS</span>
+                                            </label>
+                                            <div class="Polaris-Labelled__LabelWrapper">
+                                                <label class="Polaris-Label">All Breadcrumbs CSS</label>
+                                            </div>
+                                            <textarea id="allBreadcrumbsCSS" class="Polaris-TextField__Input" rows="4"></textarea>
+                                        </div>
+                                    </div>
+
+                                    <!-- Last Breadcrumb CSS -->
+                                    <div class="Polaris-FormLayout__Item">
+                                        <div class="setting-row">
+                                            <label class="Polaris-Choice" for="lastBreadcrumbCSSEnabled">
+                                                <input type="checkbox" id="lastBreadcrumbCSSEnabled" class="Polaris-Checkbox__Input" />
+                                                <span class="Polaris-Choice__Label">Enable Global Last Breadcrumb CSS</span>
+                                            </label>
+                                            <div class="Polaris-Labelled__LabelWrapper">
+                                                <label class="Polaris-Label">Last Breadcrumb CSS</label>
+                                            </div>
+                                            <textarea id="lastBreadcrumbCSS" class="Polaris-TextField__Input" rows="4"></textarea>
+                                        </div>
+                                    </div>
+
+                                    <!-- Hover CSS -->
+                                    <div class="Polaris-FormLayout__Item">
+                                        <div class="setting-row">
+                                            <label class="Polaris-Choice" for="hoverCSSEnabled">
+                                                <input type="checkbox" id="hoverCSSEnabled" class="Polaris-Checkbox__Input" />
+                                                <span class="Polaris-Choice__Label">Enable Global Hover CSS</span>
+                                            </label>
+                                            <div class="Polaris-Labelled__LabelWrapper">
+                                                <label class="Polaris-Label">Hover CSS</label>
+                                            </div>
+                                            <textarea id="hoverCSS" class="Polaris-TextField__Input" rows="4"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Menu Configuration -->
+                        <div class="Polaris-Card">
+                            <div class="Polaris-Card__Header">
+                                <h2 class="Polaris-Heading">Menu Configuration</h2>
+                            </div>
+                            <div class="Polaris-Card__Section">
+                                <div class="Polaris-FormLayout">
+                                    <div class="Polaris-FormLayout__Item">
+                                        <div class="setting-row">
+                                            <label class="Polaris-Choice" for="menuHandlesEnabled">
+                                                <input type="checkbox" id="menuHandlesEnabled" class="Polaris-Checkbox__Input" />
+                                                <span class="Polaris-Choice__Label">Enable Global Menu Handles</span>
+                                            </label>
+                                            <div class="Polaris-Labelled__LabelWrapper">
+                                                <label class="Polaris-Label">Menu Handles</label>
+                                                <div class="Polaris-Labelled__HelpText">
+                                                    Comma-separated menu handles (use * for all)
+                                                </div>
+                                            </div>
+                                            <input type="text" id="menuHandles" class="Polaris-TextField__Input" value="*" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Save Button -->
+                        <div class="Polaris-Card">
                             <div class="Polaris-Card__Section">
                                 <button id="save-button" class="Polaris-Button Polaris-Button--primary" onclick="saveSettings()">
                                     <span class="Polaris-Button__Content">Save Settings</span>

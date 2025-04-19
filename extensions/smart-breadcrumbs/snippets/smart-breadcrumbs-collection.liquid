@@ -1,0 +1,44 @@
+{%- comment -%}
+Collection Breadcrumb Navigation
+Parameters:
+- collection: Current collection
+- menu_handles: Comma-separated list of menu handles to search
+- separator: HTML separator between items
+{%- endcomment -%}
+
+{%- liquid
+  assign breadcrumb_found = false
+  assign menu_handle_list = menu_handles | split: ','
+  
+  # Try to find collection in specified menus
+  for handle in menu_handle_list
+    assign menu = linklists[handle]
+    if menu != blank
+      for link in menu.links
+        if link.url contains collection.url
+          assign breadcrumb_found = true
+          break
+        endif
+      endfor
+    endif
+    if breadcrumb_found
+      break
+    endif
+  endfor
+-%}
+
+<li class="breadcrumb-item">
+  <a href="/">Home</a>
+</li>
+
+{%- if breadcrumb_found -%}
+  <span class="separator">{{ separator }}</span>
+  <li class="breadcrumb-item">
+    <a href="{{ link.url }}">{{ link.title }}</a>
+  </li>
+{%- else -%}
+  <span class="separator">{{ separator }}</span>
+  <li class="breadcrumb-item">
+    <span>{{ collection.title }}</span>
+  </li>
+{%- endif -%} 
