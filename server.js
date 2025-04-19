@@ -111,6 +111,16 @@ app.get('/api/theme-settings', async (req, res) => {
 // Serve static assets
 app.use(serveStatic(join(process.cwd(), 'dist/client')));
 
+// Handle client-side routes
+app.use('/*', (req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    next();
+    return;
+  }
+  // Serve the index.html for client-side routes
+  res.sendFile(join(process.cwd(), 'dist/client/index.html'));
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
