@@ -4,7 +4,7 @@ import express from 'express';
 import serveStatic from 'serve-static';
 import { Shopify } from '@shopify/shopify-api';
 import { SQLiteSessionStorage } from '@shopify/shopify-app-session-storage-sqlite';
-import shopifyApp from '@shopify/shopify-app-express';
+import { shopifyApp } from '@shopify/shopify-app-express';
 import { LogSeverity } from '@shopify/shopify-api';
 import dotenv from 'dotenv';
 
@@ -55,10 +55,10 @@ app.get('/health', (req, res) => {
 });
 
 // Initialize Shopify app middleware
-const { withSession } = await shopifyApp(shopifyAppConfig);
+const shopify = shopifyApp(shopifyAppConfig);
 
 // Use Shopify middleware
-app.use('/*', withSession);
+app.use('/*', shopify.authenticateToken());
 
 // API Routes that require authentication
 app.use('/api/*', async (req, res, next) => {
