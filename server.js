@@ -2,10 +2,14 @@ import { join } from 'path';
 import { readFileSync } from 'fs';
 import express from 'express';
 import serveStatic from 'serve-static';
-import shopify from '@shopify/shopify-api';
+import { Shopify } from '@shopify/shopify-api';
 import { SQLiteSessionStorage } from '@shopify/shopify-app-session-storage-sqlite';
 import { shopifyApp } from '@shopify/shopify-app-express';
 import { LogSeverity } from '@shopify/shopify-api';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 const PORT = parseInt(process.env.PORT || '8081', 10);
 const DB_PATH = `${process.cwd()}/database.sqlite`;
@@ -24,7 +28,7 @@ const shopifyAppConfig = {
     scopes: ['read_themes', 'write_themes', 'read_products', 'read_content'],
     hostName: process.env.HOST.replace(/https?:\/\//, ''),
     hostScheme: process.env.HOST.split('://')[0],
-    apiVersion: '2023-10',
+    apiVersion: '2024-01',
     isEmbeddedApp: true,
     logger: { level: LogSeverity.Info },
   },
@@ -44,6 +48,15 @@ const shopifyAppMiddleware = shopifyApp(shopifyAppConfig);
 // Set up middleware
 app.use(express.json());
 app.use(shopifyAppMiddleware);
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
 
 // API Routes
 app.use('/api/*', shopifyAppMiddleware.validateAuthenticatedSession());
