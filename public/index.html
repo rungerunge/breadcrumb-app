@@ -3,253 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartBreadcrumbs</title>
-    <link rel="stylesheet" href="https://unpkg.com/@shopify/polaris@12.10.0/build/esm/styles.css"/>
-    <link rel="stylesheet" href="/styles.css">
+    <title>Smart Breadcrumbs</title>
+    <link rel="stylesheet" href="https://unpkg.com/@shopify/polaris@12.0.0/build/esm/styles.css" />
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
     <script>
-        // Debug logging
-        const debug = {
-            log: function(...args) { console.log("[App]", ...args); },
-            error: function(...args) { console.error("[App]", ...args); },
-            warn: function(...args) { console.warn("[App]", ...args); },
-            auth: function(...args) { console.log("[Auth]", ...args); }
-        };
-
-        // Check if we're in a Shopify iframe
-        const isShopifyIframe = window.top !== window.self;
-        debug.log("Is in Shopify iframe:", isShopifyIframe);
-        
-        function getShopOrigin() {
-            // Check URL params first
-            const params = new URLSearchParams(window.location.search);
-            const shop = params.get('shop');
-            if (shop) {
-                debug.auth("Found shop in URL params:", shop);
-                return shop;
-            }
-
-            // If no shop in URL, try to get from hostname for embedded apps
-            if (isShopifyIframe) {
-                const hostName = window.location.ancestorOrigins?.[0] || document.referrer;
-                if (hostName) {
-                    try {
-                        const url = new URL(hostName);
-                        debug.auth("Found shop from ancestor origin:", url.hostname);
-                        return url.hostname;
-                    } catch (error) {
-                        debug.error("Error parsing ancestor origin:", error);
-                    }
-                }
-            }
-            
-            debug.warn("No shop found in any source");
-            return null;
-        }
-
-        function redirectToAuth() {
-            const shop = getShopOrigin();
-            if (shop) {
-                const redirectUrl = `/api/auth?shop=${shop}`;
-                debug.auth(`Redirecting to auth: ${redirectUrl}`);
-                
-                if (isShopifyIframe) {
-                    window.top.location.href = redirectUrl;
-                } else {
-                    window.location.href = redirectUrl;
-                }
-            } else {
-                showToast('No shop found to authenticate', true);
-            }
-        }
-
-        function showToast(message, isError = false) {
-            const toast = document.createElement('div');
-            toast.className = `toast ${isError ? 'error' : 'success'}`;
-            toast.textContent = message;
-            
-            document.body.appendChild(toast);
-            
-            // Automatically remove the toast after 3 seconds
-            setTimeout(() => {
-                toast.classList.add('fade-out');
-                setTimeout(() => {
-                    document.body.removeChild(toast);
-                }, 500);
-            }, 3000);
-        }
-
-        async function fetchWithAuth(url, options = {}) {
-            try {
-                debug.log(`Fetching ${url}`);
-                const response = await fetch(url, options);
-                
-                if (response.status === 401) {
-                    debug.auth("Unauthorized request, redirecting to auth");
-                    redirectToAuth();
-                    return null;
-                }
-                
-                return response;
-            } catch (error) {
-                debug.error(`Fetch error for ${url}:`, error);
-                showToast(`Network error: ${error.message}`, true);
-                return null;
-            }
-        }
-
-        async function loadSettings() {
-            try {
-                debug.log("Loading settings");
-                document.getElementById('loading-container').style.display = 'block';
-                document.getElementById('settings-container').style.display = 'none';
-                
-                const response = await fetchWithAuth('/api/settings');
-                if (!response || !response.ok) {
-                    throw new Error(`Failed to load settings: ${response?.status} ${response?.statusText}`);
-                }
-                
-                const settings = await response.json();
-                debug.log("Settings loaded:", settings);
-                
-                // Font Size
-                document.getElementById('fontSize').value = settings.fontSize || '14';
-                document.getElementById('fontSizeEnabled').checked = settings.fontSizeEnabled || false;
-                
-                // Mobile Slider
-                document.getElementById('useSlider').checked = settings.useSlider || false;
-                document.getElementById('useSliderEnabled').checked = settings.useSliderEnabled || false;
-                
-                // Margins
-                document.getElementById('marginTop').value = settings.marginTop || '0';
-                document.getElementById('marginTopEnabled').checked = settings.marginTopEnabled || false;
-                document.getElementById('marginBottom').value = settings.marginBottom || '0';
-                document.getElementById('marginBottomEnabled').checked = settings.marginBottomEnabled || false;
-                
-                // Separator
-                document.getElementById('separator').value = settings.separator || '>';
-                document.getElementById('separatorEnabled').checked = settings.separatorEnabled || false;
-                
-                // CSS Fields
-                document.getElementById('desktopCSS').value = settings.desktopCSS || '';
-                document.getElementById('desktopCSSEnabled').checked = settings.desktopCSSEnabled || false;
-                document.getElementById('mobileCSS').value = settings.mobileCSS || '';
-                document.getElementById('mobileCSSEnabled').checked = settings.mobileCSSEnabled || false;
-                document.getElementById('allBreadcrumbsCSS').value = settings.allBreadcrumbsCSS || '';
-                document.getElementById('allBreadcrumbsCSSEnabled').checked = settings.allBreadcrumbsCSSEnabled || false;
-                document.getElementById('lastBreadcrumbCSS').value = settings.lastBreadcrumbCSS || '';
-                document.getElementById('lastBreadcrumbCSSEnabled').checked = settings.lastBreadcrumbCSSEnabled || false;
-                document.getElementById('hoverCSS').value = settings.hoverCSS || '';
-                document.getElementById('hoverCSSEnabled').checked = settings.hoverCSSEnabled || false;
-                
-                // Menu Handles
-                document.getElementById('menuHandles').value = settings.menuHandles || '*';
-                document.getElementById('menuHandlesEnabled').checked = settings.menuHandlesEnabled || false;
-
-                document.getElementById('settings-container').style.display = 'block';
-                document.getElementById('loading-container').style.display = 'none';
-            } catch (error) {
-                debug.error('Error loading settings:', error);
-                document.getElementById('loading-container').style.display = 'none';
-                document.getElementById('error-container').style.display = 'block';
-                document.getElementById('error-message').textContent = error.message;
-            }
-        }
-
-        async function saveSettings() {
-            try {
-                const saveButton = document.getElementById('saveButton');
-                saveButton.disabled = true;
-                saveButton.textContent = 'Saving...';
-                
-                const settings = {
-                    // Font Size
-                    fontSize: document.getElementById('fontSize').value,
-                    fontSizeEnabled: document.getElementById('fontSizeEnabled').checked,
-                    
-                    // Mobile Slider
-                    useSlider: document.getElementById('useSlider').checked,
-                    useSliderEnabled: document.getElementById('useSliderEnabled').checked,
-                    
-                    // Margins
-                    marginTop: document.getElementById('marginTop').value,
-                    marginTopEnabled: document.getElementById('marginTopEnabled').checked,
-                    marginBottom: document.getElementById('marginBottom').value,
-                    marginBottomEnabled: document.getElementById('marginBottomEnabled').checked,
-                    
-                    // Separator
-                    separator: document.getElementById('separator').value,
-                    separatorEnabled: document.getElementById('separatorEnabled').checked,
-                    
-                    // CSS Fields
-                    desktopCSS: document.getElementById('desktopCSS').value,
-                    desktopCSSEnabled: document.getElementById('desktopCSSEnabled').checked,
-                    mobileCSS: document.getElementById('mobileCSS').value,
-                    mobileCSSEnabled: document.getElementById('mobileCSSEnabled').checked,
-                    allBreadcrumbsCSS: document.getElementById('allBreadcrumbsCSS').value,
-                    allBreadcrumbsCSSEnabled: document.getElementById('allBreadcrumbsCSSEnabled').checked,
-                    lastBreadcrumbCSS: document.getElementById('lastBreadcrumbCSS').value,
-                    lastBreadcrumbCSSEnabled: document.getElementById('lastBreadcrumbCSSEnabled').checked,
-                    hoverCSS: document.getElementById('hoverCSS').value,
-                    hoverCSSEnabled: document.getElementById('hoverCSSEnabled').checked,
-                    
-                    // Menu Handles
-                    menuHandles: document.getElementById('menuHandles').value,
-                    menuHandlesEnabled: document.getElementById('menuHandlesEnabled').checked,
-                };
-                
-                debug.log("Saving settings:", settings);
-                
-                const response = await fetchWithAuth('/api/settings', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(settings)
-                });
-                
-                if (!response || !response.ok) {
-                    throw new Error(`Failed to save settings: ${response?.status} ${response?.statusText}`);
-                }
-                
-                showToast('Settings saved successfully');
-            } catch (error) {
-                debug.error('Error saving settings:', error);
-                showToast('Error saving settings: ' + error.message, true);
-            } finally {
-                const saveButton = document.getElementById('saveButton');
-                saveButton.disabled = false;
-                saveButton.textContent = 'Save Settings';
-            }
-        }
-
-        // Initialize the app
-        window.addEventListener('load', function() {
-            debug.log("App initialized");
-            
-            // Try to load settings first
-            loadSettings().catch(error => {
-                debug.error('Failed to load settings:', error);
-                // If loading fails, check if we need to authenticate
-                if (!window.location.search.includes('hmac=')) {
-                    redirectToAuth();
-                }
-            });
-            
-            // Add event listeners for form interactions
-            document.getElementById('saveButton').addEventListener('click', saveSettings);
-            
-            // Add reload button event listener
-            document.getElementById('reloadButton').addEventListener('click', function() {
-                document.getElementById('error-container').style.display = 'none';
-                loadSettings();
-            });
-            
-            // Add auth button event listener
-            document.getElementById('authButton').addEventListener('click', function() {
-                redirectToAuth();
-            });
-        });
+        // Get session token from URL if available
+        const params = new URLSearchParams(window.location.search);
+        window.host = params.get('host');
+        window.apiKey = '__SHOPIFY_API_KEY__';
+        window.sessionToken = params.get('sessionToken');
     </script>
+    <script src="/js/app.js" defer></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
@@ -409,158 +174,33 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>SmartBreadcrumbs Settings</h1>
-        
-        <div id="loading-container" class="loading-container">
-            <div class="loading-spinner"></div>
-            <p>Loading settings...</p>
+    <div id="app">
+        <div class="settings-container">
+            <h1>Smart Breadcrumbs Settings</h1>
+            
+            <!-- Loading spinner -->
+            <div class="loading-spinner" id="loading-spinner"></div>
+            
+            <!-- Error container -->
+            <div class="error-container" style="display: none;">
+                <h2>Error Loading Settings</h2>
+                <p>Failed to load settings: 500</p>
+                <div class="button-container">
+                    <button class="Polaris-Button" onclick="window.location.reload()">
+                        <span class="Polaris-Button__Content">Try Again</span>
+                    </button>
+                    <button class="Polaris-Button Polaris-Button--primary" onclick="window.location.href='/api/auth'">
+                        <span class="Polaris-Button__Content">Authenticate</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Settings form container -->
+            <div id="settings-form"></div>
         </div>
         
-        <div id="error-container" class="error-container">
-            <h2>Error Loading Settings</h2>
-            <p id="error-message">Unable to load settings</p>
-            <div>
-                <button id="reloadButton">Try Again</button>
-                <button id="authButton">Authenticate</button>
-            </div>
-        </div>
-        
-        <div id="settings-container" style="display: none;">
-            <div class="card">
-                <h2>Breadcrumb Appearance</h2>
-                
-                <div class="form-group">
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="fontSizeEnabled">
-                        <label for="fontSizeEnabled">Enable Font Size Override</label>
-                    </div>
-                    <input type="number" id="fontSize" placeholder="Font size in pixels">
-                    <div class="help-text">Default font size for breadcrumbs (in pixels)</div>
-                </div>
-                
-                <div class="form-group">
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="marginTopEnabled">
-                        <label for="marginTopEnabled">Enable Top Margin Override</label>
-                    </div>
-                    <input type="number" id="marginTop" placeholder="Top margin in pixels">
-                    <div class="help-text">Space above the breadcrumbs (in pixels)</div>
-                </div>
-                
-                <div class="form-group">
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="marginBottomEnabled">
-                        <label for="marginBottomEnabled">Enable Bottom Margin Override</label>
-                    </div>
-                    <input type="number" id="marginBottom" placeholder="Bottom margin in pixels">
-                    <div class="help-text">Space below the breadcrumbs (in pixels)</div>
-                </div>
-                
-                <div class="form-group">
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="separatorEnabled">
-                        <label for="separatorEnabled">Enable Separator Override</label>
-                    </div>
-                    <input type="text" id="separator" placeholder="Separator character">
-                    <div class="help-text">Character used between breadcrumb items (e.g., >, /, |)</div>
-                </div>
-            </div>
-            
-            <div class="card">
-                <h2>Mobile Settings</h2>
-                
-                <div class="form-group">
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="useSliderEnabled">
-                        <label for="useSliderEnabled">Enable Mobile Slider Override</label>
-                    </div>
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="useSlider">
-                        <label for="useSlider">Use horizontal slider on mobile</label>
-                    </div>
-                    <div class="help-text">Makes breadcrumbs horizontally scrollable on mobile devices</div>
-                </div>
-            </div>
-            
-            <div class="card">
-                <h2>Navigation Settings</h2>
-                
-                <div class="form-group">
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="menuHandlesEnabled">
-                        <label for="menuHandlesEnabled">Enable Menu Handles Override</label>
-                    </div>
-                    <input type="text" id="menuHandles" placeholder="Comma-separated menu handles or *">
-                    <div class="help-text">Enter menu handles to use for breadcrumbs, comma-separated, or * for all menus</div>
-                </div>
-            </div>
-            
-            <div class="card">
-                <h2>Custom CSS</h2>
-                
-                <div class="form-group">
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="desktopCSSEnabled">
-                        <label for="desktopCSSEnabled">Enable Desktop CSS Override</label>
-                    </div>
-                    <textarea id="desktopCSS" placeholder="CSS for desktop view"></textarea>
-                    <div class="help-text">Custom CSS applied only on desktop devices</div>
-                </div>
-                
-                <div class="form-group">
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="mobileCSSEnabled">
-                        <label for="mobileCSSEnabled">Enable Mobile CSS Override</label>
-                    </div>
-                    <textarea id="mobileCSS" placeholder="CSS for mobile view"></textarea>
-                    <div class="help-text">Custom CSS applied only on mobile devices</div>
-                </div>
-                
-                <div class="form-group">
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="allBreadcrumbsCSSEnabled">
-                        <label for="allBreadcrumbsCSSEnabled">Enable All Breadcrumbs CSS Override</label>
-                    </div>
-                    <textarea id="allBreadcrumbsCSS" placeholder="CSS for all breadcrumb items"></textarea>
-                    <div class="help-text">Custom CSS applied to all breadcrumb items</div>
-                </div>
-                
-                <div class="form-group">
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="lastBreadcrumbCSSEnabled">
-                        <label for="lastBreadcrumbCSSEnabled">Enable Last Breadcrumb CSS Override</label>
-                    </div>
-                    <textarea id="lastBreadcrumbCSS" placeholder="CSS for the last breadcrumb item"></textarea>
-                    <div class="help-text">Custom CSS applied only to the last breadcrumb item</div>
-                </div>
-                
-                <div class="form-group">
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="hoverCSSEnabled">
-                        <label for="hoverCSSEnabled">Enable Hover CSS Override</label>
-                    </div>
-                    <textarea id="hoverCSS" placeholder="CSS for breadcrumb items on hover"></textarea>
-                    <div class="help-text">Custom CSS applied to breadcrumb items when hovered</div>
-                </div>
-            </div>
-            
-            <div class="text-center">
-                <button id="saveButton">Save Settings</button>
-            </div>
-            
-            <div class="card" style="margin-top: 20px;">
-                <h2>Help & Documentation</h2>
-                <p>SmartBreadcrumbs helps you add navigation breadcrumbs to your store. For support, contact us at support@smartbreadcrumbs.com</p>
-                
-                <h3>Installation Instructions:</h3>
-                <ol>
-                    <li>Add the SmartBreadcrumbs app block to your theme where you want breadcrumbs to appear</li>
-                    <li>Configure the settings above to customize the appearance</li>
-                    <li>Save your settings and check your store</li>
-                </ol>
-            </div>
-        </div>
+        <!-- Toast container -->
+        <div id="toast" class="toast"></div>
     </div>
 </body>
 </html> 

@@ -12,6 +12,7 @@ import { SQLiteSessionStorage } from '@shopify/shopify-app-session-storage-sqlit
 import { restResources } from '@shopify/shopify-api/rest/admin/2022-10';
 import { open } from 'sqlite';
 import sqlite3 from 'sqlite3';
+import fs from 'fs';
 
 // Load environment variables
 dotenv.config();
@@ -110,6 +111,9 @@ app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
+// Set up static file serving
+app.use(express.static(join(__dirname, 'public')));
+
 // Set up Shopify authentication
 app.get(shopifyMiddleware.config.auth.path, shopifyMiddleware.auth.begin());
 app.get(
@@ -122,7 +126,7 @@ app.post(
   shopifyMiddleware.processWebhooks({ webhookHandlers: {} })
 );
 
-// All API routes should be authenticated
+// All subsequent routes need authentication
 app.use('/api/*', shopifyMiddleware.validateAuthenticatedSession());
 
 // Settings API routes
@@ -152,12 +156,11 @@ app.post('/api/settings', async (req, res) => {
   }
 });
 
-// Serve static files from public directory
-app.use(serveStatic(join(__dirname, 'public')));
-
-// Catch-all route for client-side routing
-app.get('*', (_req, res) => {
-  res.sendFile(join(__dirname, 'public', 'index.html'));
+// Serve index.html with injected API key
+app.get('/', (_req, res) => {
+  const htmlContent = fs.readFileSync(join(__dirname, 'public', 'index.html'), 'utf8');
+  const injectedHtml = htmlContent.replace('__SHOPIFY_API_KEY__', process.env.SHOPIFY_API_KEY || '');
+  res.send(injectedHtml);
 });
 
 // Initialize the application
