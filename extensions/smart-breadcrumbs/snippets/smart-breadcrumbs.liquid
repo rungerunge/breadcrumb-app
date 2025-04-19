@@ -1,6 +1,6 @@
 {% comment %}
     Smart Breadcrumbs - Main Snippet
-    Version: 2.1.1
+    Version: 2.1.2
     
     This snippet generates breadcrumbs based on your Shopify navigation menus.
     It examines your menu structure to find the current page and builds a breadcrumb path.
@@ -106,100 +106,92 @@
   assign menu_handles = settings.menuHandles | default: 'main-menu'
   assign handle_list = menu_handles | strip | split: ','
   
-  # Initialize breadcrumb path array
+  # Initialize breadcrumb path
   assign breadcrumb_path = ''
   
   # Special handling for products to ensure collection context
-  if template contains 'product' and product.collections.size > 0
-    # Get the current collection if it exists in the URL
+  if template contains 'product'
+    # First try to get collection from URL
     assign collection_handle = current_url | split: '/collections/' | last | split: '/products/' | first
     assign current_collection = collections[collection_handle]
     
-    # If no current collection, use the first collection
-    if current_collection == blank
-      assign current_collection = product.collections.first
-    endif
-  endif
-  
-  # Loop through all menus specified in the settings
-  for handle in handle_list
-    assign menu_handle = handle | strip
-    assign menu = linklists[menu_handle]
-    
-    if menu != blank
-      # Level 1: Check top-level menu items
-      for link in menu.links
-        # Normalize URLs for comparison
-        assign link_url_normalized = link.url | replace: 'https://', '' | replace: 'http://', ''
-        assign current_url_normalized = current_url | replace: 'https://', '' | replace: 'http://', ''
-        
-        if link_url_normalized == current_url_normalized or current_url contains link.url
-          # Found at level 1
-          assign found_breadcrumbs = true
-          assign breadcrumb_path = breadcrumb_path | append: 'Home|/,' | append: link.title | append: '|' | append: link.url
-          break
-        endif
-        
-        # Level 2: Check child links
-        for child_link in link.links
-          # Normalize URLs for comparison
-          assign child_link_url_normalized = child_link.url | replace: 'https://', '' | replace: 'http://', ''
-          
-          if child_link_url_normalized == current_url_normalized or current_url contains child_link.url
-            # Found at level 2
-            assign found_breadcrumbs = true
-            assign breadcrumb_path = breadcrumb_path | append: 'Home|/,' | append: link.title | append: '|' | append: link.url | append: ',' | append: child_link.title | append: '|' | append: child_link.url
-            break
-          endif
-          
-          # Level 3: Check grandchild links (if any)
-          for grandchild_link in child_link.links
-            # Normalize URLs for comparison
-            assign grandchild_link_url_normalized = grandchild_link.url | replace: 'https://', '' | replace: 'http://', ''
+    # If no collection in URL, check if product belongs to the collection in navigation
+    if current_collection == blank and product.collections.size > 0
+      # Loop through all menus to find the collection
+      for handle in handle_list
+        assign menu = linklists[handle | strip]
+        if menu != blank
+          for link in menu.links
+            # Check if this menu item is a collection and matches one of the product's collections
+            assign link_handle = link.url | split: '/collections/' | last
+            for collection in product.collections
+              if collection.handle == link_handle or link.url contains collection.url
+                assign current_collection = collection
+                assign found_breadcrumbs = true
+                assign breadcrumb_path = breadcrumb_path | append: 'Home|/,' | append: link.title | append: '|' | append: link.url | append: ',' | append: product.title | append: '|' | append: product.url
+                break
+              endif
+            endfor
             
-            if grandchild_link_url_normalized == current_url_normalized or current_url contains grandchild_link.url
-              # Found at level 3
-              assign found_breadcrumbs = true
-              assign breadcrumb_path = breadcrumb_path | append: 'Home|/,' | append: link.title | append: '|' | append: link.url | append: ',' | append: child_link.title | append: '|' | append: child_link.url | append: ',' | append: grandchild_link.title | append: '|' | append: grandchild_link.url
+            if found_breadcrumbs
+              break
+            endif
+            
+            # Check child links if not found at top level
+            for child_link in link.links
+              assign child_handle = child_link.url | split: '/collections/' | last
+              for collection in product.collections
+                if collection.handle == child_handle or child_link.url contains collection.url
+                  assign current_collection = collection
+                  assign found_breadcrumbs = true
+                  assign breadcrumb_path = breadcrumb_path | append: 'Home|/,' | append: link.title | append: '|' | append: link.url | append: ',' | append: child_link.title | append: '|' | append: child_link.url | append: ',' | append: product.title | append: '|' | append: product.url
+                  break
+                endif
+              endfor
+              
+              if found_breadcrumbs
+                break
+              endif
+            endfor
+            
+            if found_breadcrumbs
               break
             endif
           endfor
-          
-          if found_breadcrumbs
-            break
-          endif
-        endfor
+        endif
         
         if found_breadcrumbs
           break
         endif
       endfor
     endif
-    
-    if found_breadcrumbs
-      break
-    endif
-  endfor
+  endif
   
-  # If no breadcrumbs found in menu but we have a product in a collection
-  if found_breadcrumbs == false and template contains 'product' and current_collection != blank
-    # Try to find the collection in the menu structure
+  # If no breadcrumbs found yet, try regular menu traversal
+  if found_breadcrumbs == false
     for handle in handle_list
       assign menu_handle = handle | strip
       assign menu = linklists[menu_handle]
       
       if menu != blank
+        # Level 1: Check top-level menu items
         for link in menu.links
-          if link.url contains current_collection.url
+          assign link_url_normalized = link.url | replace: 'https://', '' | replace: 'http://', ''
+          assign current_url_normalized = current_url | replace: 'https://', '' | replace: 'http://', ''
+          
+          if link_url_normalized == current_url_normalized or current_url contains link.url
             assign found_breadcrumbs = true
-            assign breadcrumb_path = breadcrumb_path | append: 'Home|/,' | append: link.title | append: '|' | append: link.url | append: ',' | append: product.title | append: '|' | append: product.url
+            assign breadcrumb_path = breadcrumb_path | append: 'Home|/,' | append: link.title | append: '|' | append: link.url
             break
           endif
           
+          # Level 2: Check child links
           for child_link in link.links
-            if child_link.url contains current_collection.url
+            assign child_link_url_normalized = child_link.url | replace: 'https://', '' | replace: 'http://', ''
+            
+            if child_link_url_normalized == current_url_normalized or current_url contains child_link.url
               assign found_breadcrumbs = true
-              assign breadcrumb_path = breadcrumb_path | append: 'Home|/,' | append: link.title | append: '|' | append: link.url | append: ',' | append: child_link.title | append: '|' | append: child_link.url | append: ',' | append: product.title | append: '|' | append: product.url
+              assign breadcrumb_path = breadcrumb_path | append: 'Home|/,' | append: link.title | append: '|' | append: link.url | append: ',' | append: child_link.title | append: '|' | append: child_link.url
               break
             endif
           endfor
@@ -265,16 +257,7 @@
           <span class="smart-breadcrumbs__current" aria-current="page">{{ product.title }}</span>
         </li>
       {% elsif template contains 'collection' and collection.handle != 'all' %}
-        {% comment %} Collection page: Home > Parent Collection > Collection {% endcomment %}
-        {% if collection.metafields.custom.parent_collection %}
-          {% assign parent_collection = collections[collection.metafields.custom.parent_collection] %}
-          {% if parent_collection %}
-            <li class="smart-breadcrumbs__item">
-              <a href="{{ parent_collection.url }}" class="smart-breadcrumbs__link">{{ parent_collection.title }}</a>
-              <span class="smart-breadcrumbs__separator" aria-hidden="true">{{ settings.separator | default: '/' }}</span>
-            </li>
-          {% endif %}
-        {% endif %}
+        {% comment %} Collection page: Home > Collection {% endcomment %}
         <li class="smart-breadcrumbs__item">
           <span class="smart-breadcrumbs__current" aria-current="page">{{ collection.title }}</span>
         </li>
@@ -310,11 +293,13 @@
 {% comment %} Debug information (hidden in production) {% endcomment %}
 {% if settings.debug_mode %}
   <div style="display: none;">
+    <p>Debug Information:</p>
     <p>Current URL: {{ current_url }}</p>
     <p>Template: {{ template }}</p>
     <p>Menu Handles: {{ menu_handles }}</p>
     <p>Found in Menus: {{ found_breadcrumbs }}</p>
     <p>Current Collection: {{ current_collection.title }}</p>
+    <p>Product Collections: {{ product.collections | map: 'title' | join: ', ' }}</p>
     <p>Breadcrumb Path: {{ breadcrumb_path }}</p>
   </div>
 {% endif %} 
