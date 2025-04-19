@@ -1,62 +1,88 @@
 {% comment %}
-    Minimal Breadcrumbs Component
-    Version: 3.0.0
-    Follows Shopify best practices with no external dependencies
+    Smart Breadcrumbs - Direct Implementation
+    Version: 3.1.0
+    No JavaScript, no storage, no external requests
 {% endcomment %}
 
-<nav aria-label="Breadcrumbs" style="font-size: 14px; margin: 1em 0;">
-  <ol style="display: flex; list-style: none; padding: 0; margin: 0; flex-wrap: wrap;">
-    <li style="display: inline-flex; align-items: center;">
-      <a href="/" style="color: #666; text-decoration: none;">Home</a>
+{% liquid
+  assign current_url = request.path
+%}
+
+<nav aria-label="Breadcrumbs" class="breadcrumb__container">
+  <ol class="breadcrumb__list">
+    <li class="breadcrumb__item">
+      <a href="/" class="breadcrumb__link">Home</a>
     </li>
 
     {% if template contains 'product' %}
-      <li style="display: inline-flex; align-items: center; margin: 0 0.3em;">
-        <span style="color: #999;" aria-hidden="true">/</span>
-      </li>
+      <li class="breadcrumb__item breadcrumb__separator" aria-hidden="true">/</li>
       {% if collection %}
-        <li style="display: inline-flex; align-items: center;">
-          <a href="{{ collection.url }}" style="color: #666; text-decoration: none;">{{ collection.title }}</a>
+        <li class="breadcrumb__item">
+          <a href="{{ collection.url }}" class="breadcrumb__link">{{ collection.title }}</a>
         </li>
-        <li style="display: inline-flex; align-items: center; margin: 0 0.3em;">
-          <span style="color: #999;" aria-hidden="true">/</span>
-        </li>
+        <li class="breadcrumb__item breadcrumb__separator" aria-hidden="true">/</li>
       {% endif %}
-      <li style="display: inline-flex; align-items: center;">
-        <span style="color: #333; font-weight: 500;" aria-current="page">{{ product.title }}</span>
+      <li class="breadcrumb__item breadcrumb__current">
+        <span aria-current="page">{{ product.title }}</span>
       </li>
 
     {% elsif template contains 'collection' %}
-      <li style="display: inline-flex; align-items: center; margin: 0 0.3em;">
-        <span style="color: #999;" aria-hidden="true">/</span>
-      </li>
-      <li style="display: inline-flex; align-items: center;">
-        <span style="color: #333; font-weight: 500;" aria-current="page">{{ collection.title }}</span>
+      <li class="breadcrumb__item breadcrumb__separator" aria-hidden="true">/</li>
+      <li class="breadcrumb__item breadcrumb__current">
+        <span aria-current="page">{{ collection.title }}</span>
       </li>
 
     {% elsif template contains 'page' %}
-      <li style="display: inline-flex; align-items: center; margin: 0 0.3em;">
-        <span style="color: #999;" aria-hidden="true">/</span>
-      </li>
-      <li style="display: inline-flex; align-items: center;">
-        <span style="color: #333; font-weight: 500;" aria-current="page">{{ page.title }}</span>
+      <li class="breadcrumb__item breadcrumb__separator" aria-hidden="true">/</li>
+      <li class="breadcrumb__item breadcrumb__current">
+        <span aria-current="page">{{ page.title }}</span>
       </li>
 
     {% elsif template contains 'cart' %}
-      <li style="display: inline-flex; align-items: center; margin: 0 0.3em;">
-        <span style="color: #999;" aria-hidden="true">/</span>
-      </li>
-      <li style="display: inline-flex; align-items: center;">
-        <span style="color: #333; font-weight: 500;" aria-current="page">Shopping Cart</span>
+      <li class="breadcrumb__item breadcrumb__separator" aria-hidden="true">/</li>
+      <li class="breadcrumb__item breadcrumb__current">
+        <span aria-current="page">Shopping Cart</span>
       </li>
 
     {% elsif template != 'index' %}
-      <li style="display: inline-flex; align-items: center; margin: 0 0.3em;">
-        <span style="color: #999;" aria-hidden="true">/</span>
-      </li>
-      <li style="display: inline-flex; align-items: center;">
-        <span style="color: #333; font-weight: 500;" aria-current="page">{{ page_title }}</span>
+      <li class="breadcrumb__item breadcrumb__separator" aria-hidden="true">/</li>
+      <li class="breadcrumb__item breadcrumb__current">
+        <span aria-current="page">{{ page_title }}</span>
       </li>
     {% endif %}
   </ol>
-</nav> 
+</nav>
+
+<style>
+  .breadcrumb__container {
+    margin: 1em 0;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .breadcrumb__list {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+  .breadcrumb__item {
+    display: inline-flex;
+    align-items: center;
+  }
+  .breadcrumb__separator {
+    margin: 0 0.5em;
+    color: #999;
+  }
+  .breadcrumb__link {
+    color: #666;
+    text-decoration: none;
+  }
+  .breadcrumb__link:hover {
+    text-decoration: underline;
+  }
+  .breadcrumb__current {
+    color: #333;
+    font-weight: 500;
+  }
+</style> 
