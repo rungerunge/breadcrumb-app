@@ -4,7 +4,7 @@ import express from 'express';
 import serveStatic from 'serve-static';
 import { Shopify } from '@shopify/shopify-api';
 import { SQLiteSessionStorage } from '@shopify/shopify-app-session-storage-sqlite';
-import { shopifyApp } from '@shopify/shopify-app-express';
+import shopifyApp from '@shopify/shopify-app-express';
 import { LogSeverity } from '@shopify/shopify-api';
 import dotenv from 'dotenv';
 
@@ -42,14 +42,10 @@ const shopifyAppConfig = {
   sessionStorage,
 };
 
-// Create Shopify app middleware
-const shopifyAppMiddleware = shopifyApp(shopifyAppConfig);
-
 // Set up middleware
 app.use(express.json());
-app.use(shopifyAppMiddleware);
 
-// Health check endpoint
+// Health check endpoint (before Shopify middleware)
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
@@ -58,8 +54,21 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API Routes
-app.use('/api/*', shopifyAppMiddleware.validateAuthenticatedSession());
+// Initialize Shopify app middleware
+const { withSession } = await shopifyApp(shopifyAppConfig);
+
+// Use Shopify middleware
+app.use('/*', withSession);
+
+// API Routes that require authentication
+app.use('/api/*', async (req, res, next) => {
+  const session = res.locals.shopify?.session;
+  if (!session) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+  next();
+});
 
 // Settings endpoints
 app.get('/api/settings', async (req, res) => {
