@@ -6,7 +6,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import serveStatic from 'serve-static';
 import dotenv from 'dotenv';
-import { ApiVersion } from '@shopify/shopify-api';
+import { ApiVersion, shopifyApi } from '@shopify/shopify-api';
 import { shopifyApp } from '@shopify/shopify-app-express';
 import { SQLiteSessionStorage } from '@shopify/shopify-app-session-storage-sqlite';
 import { open } from 'sqlite';
@@ -68,18 +68,25 @@ let db;
   `);
 })();
 
+// Initialize Shopify API
+const shopify = shopifyApi({
+  apiKey: process.env.SHOPIFY_API_KEY || '',
+  apiSecretKey: process.env.SHOPIFY_API_SECRET || '',
+  scopes: (process.env.SCOPES || '').split(','),
+  hostName: process.env.HOST ? process.env.HOST.replace(/https?:\/\//, '') : '',
+  hostScheme: process.env.HOST?.startsWith('https') ? 'https' : 'http',
+  apiVersion: ApiVersion.October22,
+  isEmbeddedApp: true,
+  logger: {
+    level: isDev ? 0 : 2,
+    httpRequests: true,
+    timestamps: true,
+  },
+});
+
 // Create the Shopify app configuration
 const shopifyAppConfig = {
-  api: {
-    apiKey: process.env.SHOPIFY_API_KEY || '',
-    apiSecretKey: process.env.SHOPIFY_API_SECRET || '',
-    scopes: (process.env.SCOPES || '').split(','),
-    hostName: process.env.HOST ? process.env.HOST.replace(/https?:\/\//, '') : '',
-    hostScheme: process.env.HOST?.startsWith('https') ? 'https' : 'http',
-    apiVersion: ApiVersion.October22,
-    isEmbeddedApp: true,
-    restResources: {},
-  },
+  api: shopify,
   auth: {
     path: '/api/auth',
     callbackPath: '/api/auth/callback',
@@ -91,7 +98,7 @@ const shopifyAppConfig = {
 };
 
 // Initialize Shopify app middleware
-const shopify = shopifyApp(shopifyAppConfig);
+const shopifyMiddleware = shopifyApp(shopifyAppConfig);
 
 // Set up the health check endpoint before authentication
 app.get('/health', (_req, res) => {
@@ -99,19 +106,19 @@ app.get('/health', (_req, res) => {
 });
 
 // Set up Shopify authentication
-app.get(shopify.config.auth.path, shopify.auth.begin());
+app.get(shopifyMiddleware.config.auth.path, shopifyMiddleware.auth.begin());
 app.get(
-  shopify.config.auth.callbackPath,
-  shopify.auth.callback(),
-  shopify.redirectToShopifyOrAppRoot()
+  shopifyMiddleware.config.auth.callbackPath,
+  shopifyMiddleware.auth.callback(),
+  shopifyMiddleware.redirectToShopifyOrAppRoot()
 );
 app.post(
-  shopify.config.webhooks.path,
-  shopify.processWebhooks({ webhookHandlers: {} })
+  shopifyMiddleware.config.webhooks.path,
+  shopifyMiddleware.processWebhooks({ webhookHandlers: {} })
 );
 
 // All API routes should be authenticated
-app.use('/api/*', shopify.validateAuthenticatedSession());
+app.use('/api/*', shopifyMiddleware.validateAuthenticatedSession());
 
 // Settings API routes
 app.get('/api/settings', async (req, res) => {
