@@ -1,15 +1,10 @@
-{% comment %}
-    Smart Breadcrumbs - Section
-    Version: 3.0.0
-    Direct implementation with error handling
-{% endcomment %}
+{%- comment -%}
+  Smart Breadcrumbs Section v5.1
+  A section for breadcrumb navigation that can be added to any template
+{%- endcomment -%}
 
-<div class="breadcrumbs-section" 
-     id="breadcrumbs-{{ section.id }}"
-     style="
-       margin-top: {{ section.settings.margin_top }}px;
-       margin-bottom: {{ section.settings.margin_bottom }}px;
-     ">
+<div id="smart-breadcrumbs" class="smart-breadcrumbs-section" 
+  style="margin-top: {{ section.settings.marginTop }}px; margin-bottom: {{ section.settings.marginBottom }}px;">
   {% render 'smart-breadcrumbs' %}
 </div>
 
@@ -18,28 +13,23 @@
   "name": "Smart Breadcrumbs",
   "settings": [
     {
-      "type": "header",
-      "content": "Layout"
+      "type": "number",
+      "id": "marginTop",
+      "label": "Margin Top",
+      "default": 20
     },
     {
-      "type": "range",
-      "id": "margin_top",
-      "label": "Top Margin",
-      "min": 0,
-      "max": 60,
-      "step": 5,
-      "unit": "px",
-      "default": 15
+      "type": "number",
+      "id": "marginBottom",
+      "label": "Margin Bottom",
+      "default": 20
     },
     {
-      "type": "range",
-      "id": "margin_bottom",
-      "label": "Bottom Margin",
-      "min": 0,
-      "max": 60,
-      "step": 5,
-      "unit": "px",
-      "default": 15
+      "type": "checkbox",
+      "id": "enableDebugging",
+      "label": "Enable Debugging",
+      "default": true,
+      "info": "Shows diagnostic information to help troubleshoot breadcrumb issues"
     }
   ],
   "presets": [

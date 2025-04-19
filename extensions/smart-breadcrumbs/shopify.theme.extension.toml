@@ -1,5 +1,5 @@
 name = "Smart Breadcrumbs"
-version = "3.0.0"
+version = "5.1.0"
 type = "theme"
 
 # Theme extension settings
@@ -8,6 +8,13 @@ type = "section"
 name = "Smart Breadcrumbs"
 handle = "breadcrumbs"
 template = ["index", "product", "collection", "page", "cart", "blog", "article"]
+
+[[assets]]
+type = "script"
+handle = "breadcrumb-helper"
+path = "assets/breadcrumb-helper.js"
+load = "defer"
+includes = ["product"]
 
 [[settings]]
   [[settings.input]]

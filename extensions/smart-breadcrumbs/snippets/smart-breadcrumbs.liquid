@@ -1,12 +1,26 @@
 {% comment %}
-  Smart Breadcrumbs v5.0
+  Smart Breadcrumbs v5.1
   A robust breadcrumb navigation component
   
   Usage:
   {% render 'smart-breadcrumbs' %}
 {% endcomment %}
 
-{%- unless template == 'index' or template == 'cart' or template == '404' -%}
+{%- liquid
+  # Set debug mode to true to see diagnostic information
+  assign debug_mode = true
+
+  # Determine page type
+  assign page_type = request.page_type
+
+  # Disable breadcrumbs on certain pages
+  assign show_breadcrumbs = true
+  if template == 'index' or template == '404'
+    assign show_breadcrumbs = false
+  endif
+-%}
+
+{%- if show_breadcrumbs -%}
   {%- if template contains 'product' -%}
     {% render 'smart-breadcrumbs-product' %}
   {%- elsif template contains 'collection' -%}
@@ -14,24 +28,103 @@
   {%- else -%}
     {% render 'smart-breadcrumbs-page' %}
   {%- endif -%}
-{%- endunless -%}
+{%- endif -%}
 
 {% if debug_mode %}
-<!-- Inject debugging script -->
+<style>
+  .breadcrumb-debug {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 12px;
+  }
+  .breadcrumb-debug h3 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  .breadcrumb-debug-row {
+    padding: 3px 0;
+    display: flex;
+  }
+  .breadcrumb-debug-label {
+    font-weight: bold;
+    margin-right: 10px;
+    min-width: 120px;
+  }
+  .breadcrumb-debug-value {
+    font-family: monospace;
+    color: #0366d6;
+  }
+</style>
+
+<div class="breadcrumb-debug">
+  <h3>Breadcrumb Diagnostics</h3>
+  <div class="breadcrumb-debug-row">
+    <span class="breadcrumb-debug-label">Template:</span>
+    <span class="breadcrumb-debug-value">{{ template }}</span>
+  </div>
+  <div class="breadcrumb-debug-row">
+    <span class="breadcrumb-debug-label">Page Type:</span>
+    <span class="breadcrumb-debug-value">{{ page_type }}</span>
+  </div>
+  <div class="breadcrumb-debug-row">
+    <span class="breadcrumb-debug-label">Path:</span>
+    <span class="breadcrumb-debug-value">{{ request.path }}</span>
+  </div>
+  <div class="breadcrumb-debug-row">
+    <span class="breadcrumb-debug-label">Collection:</span>
+    <span class="breadcrumb-debug-value">
+      {% if collection %}
+        {{ collection.title }} ({{ collection.handle }})
+      {% else %}
+        null
+      {% endif %}
+    </span>
+  </div>
+  <div class="breadcrumb-debug-row">
+    <span class="breadcrumb-debug-label">Product:</span>
+    <span class="breadcrumb-debug-value">
+      {% if product %}
+        {{ product.title }} ({{ product.handle }})
+      {% else %}
+        null
+      {% endif %}
+    </span>
+  </div>
+  {% if product %}
+  <div class="breadcrumb-debug-row">
+    <span class="breadcrumb-debug-label">Product Collections:</span>
+    <span class="breadcrumb-debug-value">
+      {% if product.collections.size > 0 %}
+        {% for collection in product.collections %}
+          {{ collection.title }}{% unless forloop.last %}, {% endunless %}
+        {% endfor %}
+      {% else %}
+        No collections
+      {% endif %}
+    </span>
+  </div>
+  {% endif %}
+</div>
+
 <script>
   console.log('=== BREADCRUMB DEBUG INFO ===');
   console.log('Template:', {{ template | json }});
   console.log('URL:', {{ request.path | json }});
   console.log('Collection:', {% if collection %}{{ collection.title | json }}{% else %}null{% endif %});
   console.log('Product:', {% if product %}{{ product.title | json }}{% else %}null{% endif %});
-  document.addEventListener('DOMContentLoaded', function() {
-    const breadcrumb = document.querySelector('[data-breadcrumb-component]');
-    if (breadcrumb) {
-      console.log('✅ Breadcrumb element found in DOM:', breadcrumb);
-      breadcrumb.style.border = '2px dashed green';
-    } else {
-      console.error('❌ Breadcrumb element NOT found in DOM');
-    }
-  });
+  {% if product %}
+  console.log('Product Collections:', 
+    {% if product.collections.size > 0 %}
+      {{ product.collections | map: 'title' | json }}
+    {% else %}
+      []
+    {% endif %}
+  );
+  {% endif %}
 </script>
 {% endif %} 
