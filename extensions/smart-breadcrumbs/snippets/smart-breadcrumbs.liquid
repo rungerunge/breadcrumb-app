@@ -1,103 +1,38 @@
 {% comment %}
-    Smart Breadcrumbs - Main Snippet
-    Version: 2.1.6
-    Static Implementation
+    Smart Breadcrumbs - Ultra Simple Version
+    Version: 2.1.8
+    No external dependencies, no storage, no JavaScript
 {% endcomment %}
 
-{%- style -%}
-.smart-breadcrumbs {
-    display: block;
-    margin: 1em 0;
-    padding: 0.5em 1em;
-    background: #f8f8f8;
-    border-radius: 4px;
-}
+<div style="margin: 1em 0; padding: 0.5em 1em; background: #f8f8f8; border-radius: 4px; font-size: 14px;">
+  <span style="color: #666;">
+    <a href="/" style="color: #666; text-decoration: none;">Home</a>
+  </span>
 
-.smart-breadcrumbs__list {
-    display: flex;
-    flex-wrap: wrap;
-    padding: 0;
-    margin: 0;
-    list-style: none;
-}
-
-.smart-breadcrumbs__item {
-    display: flex;
-    align-items: center;
-}
-
-.smart-breadcrumbs__link {
-    color: #666;
-    text-decoration: none;
-    font-size: 0.9em;
-}
-
-.smart-breadcrumbs__link:hover {
-    color: #000;
-    text-decoration: underline;
-}
-
-.smart-breadcrumbs__separator {
-    margin: 0 0.5em;
-    color: #999;
-}
-
-.smart-breadcrumbs__current {
-    color: #333;
-    font-weight: 500;
-    font-size: 0.9em;
-}
-
-@media screen and (max-width: 768px) {
-    .smart-breadcrumbs {
-        padding: 0.5em;
-        margin: 0.5em 0;
-    }
-}
-{%- endstyle -%}
-
-<nav class="smart-breadcrumbs" aria-label="breadcrumb">
-  <ol class="smart-breadcrumbs__list">
-    <li class="smart-breadcrumbs__item">
-      <a href="/" class="smart-breadcrumbs__link">Home</a>
-      <span class="smart-breadcrumbs__separator" aria-hidden="true">/</span>
-    </li>
-
-    {% if template contains 'product' %}
-      {% if collection %}
-        <li class="smart-breadcrumbs__item">
-          <a href="{{ collection.url }}" class="smart-breadcrumbs__link">{{ collection.title }}</a>
-          <span class="smart-breadcrumbs__separator" aria-hidden="true">/</span>
-        </li>
-      {% elsif product.collections.first %}
-        <li class="smart-breadcrumbs__item">
-          <a href="{{ product.collections.first.url }}" class="smart-breadcrumbs__link">{{ product.collections.first.title }}</a>
-          <span class="smart-breadcrumbs__separator" aria-hidden="true">/</span>
-        </li>
-      {% endif %}
-      <li class="smart-breadcrumbs__item">
-        <span class="smart-breadcrumbs__current">{{ product.title }}</span>
-      </li>
-
-    {% elsif template contains 'collection' %}
-      <li class="smart-breadcrumbs__item">
-        <span class="smart-breadcrumbs__current">{{ collection.title }}</span>
-      </li>
-
-    {% elsif template contains 'page' %}
-      <li class="smart-breadcrumbs__item">
-        <span class="smart-breadcrumbs__current">{{ page.title }}</span>
-      </li>
-
-    {% elsif template contains 'cart' %}
-      <li class="smart-breadcrumbs__item">
-        <span class="smart-breadcrumbs__current">Shopping Cart</span>
-      </li>
-
-    {% else %}
-      <li class="smart-breadcrumbs__item">
-        <span class="smart-breadcrumbs__current">{{ page_title }}</span>
-      </li>
+  {% if template contains 'product' %}
+    <span style="color: #999; margin: 0 0.5em;">/</span>
+    {% if collection %}
+      <span>
+        <a href="{{ collection.url }}" style="color: #666; text-decoration: none;">{{ collection.title }}</a>
+      </span>
     {% endif %}
-  </ol>
-</nav> 
+    <span style="color: #999; margin: 0 0.5em;">/</span>
+    <span style="color: #333; font-weight: 500;">{{ product.title }}</span>
+
+  {% elsif template contains 'collection' %}
+    <span style="color: #999; margin: 0 0.5em;">/</span>
+    <span style="color: #333; font-weight: 500;">{{ collection.title }}</span>
+
+  {% elsif template contains 'page' %}
+    <span style="color: #999; margin: 0 0.5em;">/</span>
+    <span style="color: #333; font-weight: 500;">{{ page.title }}</span>
+
+  {% elsif template contains 'cart' %}
+    <span style="color: #999; margin: 0 0.5em;">/</span>
+    <span style="color: #333; font-weight: 500;">Shopping Cart</span>
+
+  {% else %}
+    <span style="color: #999; margin: 0 0.5em;">/</span>
+    <span style="color: #333; font-weight: 500;">{{ page_title }}</span>
+  {% endif %}
+</div> 
