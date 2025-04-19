@@ -1,7 +1,4 @@
-{% comment %}
-    Smart Breadcrumbs - Product Page v5.0
-    Specific breadcrumb implementation for product pages
-{% endcomment %}
+{% comment %} Smart Breadcrumbs for general pages {% endcomment %}
 
 {%- style -%}
 .smart-breadcrumbs {
@@ -59,28 +56,32 @@
     <!-- Home Link -->
     <a href="/" class="smart-breadcrumbs__link">Home</a>
     
-    {% if product %}
-    <!-- Collection Link (if available) -->
-    {% if collection %}
+    {% if page %}
+    <!-- Current Page -->
     <span class="smart-breadcrumbs__separator">/</span>
-    <a href="{{ collection.url }}" class="smart-breadcrumbs__link">{{ collection.title }}</a>
-    {% elsif product.collections.first %}
+    <span class="smart-breadcrumbs__current">{{ page.title }}</span>
+    {% elsif request.page_type == 'search' %}
+    <!-- Search Page -->
     <span class="smart-breadcrumbs__separator">/</span>
-    <a href="{{ product.collections.first.url }}" class="smart-breadcrumbs__link">{{ product.collections.first.title }}</a>
-    {% endif %}
-    
-    <!-- Current Product -->
+    <span class="smart-breadcrumbs__current">Search Results</span>
+    {% elsif request.page_type == 'cart' %}
+    <!-- Cart Page -->
     <span class="smart-breadcrumbs__separator">/</span>
-    <span class="smart-breadcrumbs__current">{{ product.title }}</span>
+    <span class="smart-breadcrumbs__current">Cart</span>
+    {% elsif request.page_type == '404' %}
+    <!-- 404 Page -->
+    <span class="smart-breadcrumbs__separator">/</span>
+    <span class="smart-breadcrumbs__current">Page Not Found</span>
+    {% else %}
+    <!-- Fallback for Other Page Types -->
+    <span class="smart-breadcrumbs__separator">/</span>
+    <span class="smart-breadcrumbs__current">{{ request.page_type | capitalize }}</span>
     {% endif %}
 </nav>
 
 {% comment %} Error Handling {% endcomment %}
-{% unless product %}
-    {% capture debug_info %}
-      Product object not available
-      Page type: {{ request.page_type }}
-      Path: {{ request.path }}
-      Template: {{ template }}
-    {% endcapture %}
-{% endunless %}
+{% capture debug_info %}
+  Page type: {{ request.page_type }}
+  Path: {{ request.path }}
+  Template: {{ template }}
+{% endcapture %} 

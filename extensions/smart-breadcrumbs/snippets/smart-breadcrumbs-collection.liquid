@@ -13,13 +13,10 @@
     align-items: center;
     padding: 10px 0;
     margin: 0;
-    list-style: none;
     font-size: var(--breadcrumb-font-size, 14px);
-}
-
-.smart-breadcrumbs__item {
-    display: flex;
-    align-items: center;
+    background-color: rgba(0, 0, 0, 0.03);
+    padding: 8px 15px;
+    border-radius: 4px;
 }
 
 .smart-breadcrumbs__link {
@@ -45,7 +42,7 @@
 @media screen and (max-width: 768px) {
     .smart-breadcrumbs {
         font-size: var(--breadcrumb-mobile-font-size, 12px);
-        padding: 8px 0;
+        padding: 8px 12px;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
@@ -62,38 +59,22 @@
 {%- endstyle -%}
 
 <nav class="smart-breadcrumbs" aria-label="breadcrumb">
-    <ol class="smart-breadcrumbs__list">
-        {% comment %} Home Link {% endcomment %}
-        <li class="smart-breadcrumbs__item">
-            <a href="/" class="smart-breadcrumbs__link">{{ 'general.breadcrumbs.home' | t }}</a>
-            <span class="smart-breadcrumbs__separator" aria-hidden="true">/</span>
-        </li>
-
-        {% comment %} Parent Collection Link (if available) {% endcomment %}
-        {% if collection.metafields.custom.parent_collection %}
-            {% assign parent_collection = collections[collection.metafields.custom.parent_collection] %}
-            {% if parent_collection %}
-                <li class="smart-breadcrumbs__item">
-                    <a href="{{ parent_collection.url }}" class="smart-breadcrumbs__link">{{ parent_collection.title }}</a>
-                    <span class="smart-breadcrumbs__separator" aria-hidden="true">/</span>
-                </li>
-            {% endif %}
-        {% endif %}
-
-        {% comment %} Current Collection {% endcomment %}
-        <li class="smart-breadcrumbs__item">
-            <span class="smart-breadcrumbs__current" aria-current="page">{{ collection.title }}</span>
-        </li>
-    </ol>
+    <!-- Home Link -->
+    <a href="/" class="smart-breadcrumbs__link">Home</a>
+    
+    {% if collection %}
+    <!-- Current Collection -->
+    <span class="smart-breadcrumbs__separator">/</span>
+    <span class="smart-breadcrumbs__current">{{ collection.title }}</span>
+    {% endif %}
 </nav>
 
 {% comment %} Error Handling {% endcomment %}
 {% unless collection %}
-    {% comment %} Log error for debugging {% endcomment %}
-    {% capture error_message %}
-        Smart Breadcrumbs Error: Collection object not available
-        Template: {{ template }}
-        URL: {{ request.path }}
+    {% capture debug_info %}
+      Collection object not available
+      Page type: {{ request.page_type }}
+      Path: {{ request.path }}
+      Template: {{ template }}
     {% endcapture %}
-    {% comment %} You can add custom error logging here {% endcomment %}
 {% endunless %} 

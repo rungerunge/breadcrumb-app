@@ -1,111 +1,20 @@
 {% comment %}
-    Smart Breadcrumbs - Debug Version
-    Version: 3.2.0
-    Includes debugging and visual indicators
+  Smart Breadcrumbs v5.0
+  A robust breadcrumb navigation component
+  
+  Usage:
+  {% render 'smart-breadcrumbs' %}
 {% endcomment %}
 
-{% liquid
-  assign current_url = request.path
-  assign template_type = template | split: '.' | first
-  assign debug_mode = true
-%}
-
-<!-- Breadcrumbs Debug Info (Start) -->
-{% if debug_mode %}
-<div class="breadcrumb-debug" style="background: #f0f8ff; border: 1px solid #b0e0e6; padding: 10px; margin: 10px 0; font-family: monospace; font-size: 12px;">
-  <div><strong>Breadcrumb Debug Info:</strong></div>
-  <div>Template: {{ template }}</div>
-  <div>Template Type: {{ template_type }}</div>
-  <div>Current URL: {{ current_url }}</div>
-  <div>Page Title: {{ page_title }}</div>
-  {% if collection %}<div>Collection: {{ collection.title }} ({{ collection.id }})</div>{% endif %}
-  {% if product %}<div>Product: {{ product.title }} ({{ product.id }})</div>{% endif %}
-  {% if page %}<div>Page: {{ page.title }} ({{ page.id }})</div>{% endif %}
-</div>
-{% endif %}
-<!-- Breadcrumbs Debug Info (End) -->
-
-<nav aria-label="Breadcrumbs" class="breadcrumb__container" data-breadcrumb-component="true">
-  <ol class="breadcrumb__list">
-    <li class="breadcrumb__item">
-      <a href="/" class="breadcrumb__link">Home</a>
-    </li>
-
-    {% if template contains 'product' %}
-      <li class="breadcrumb__item breadcrumb__separator" aria-hidden="true">/</li>
-      {% if collection %}
-        <li class="breadcrumb__item">
-          <a href="{{ collection.url }}" class="breadcrumb__link">{{ collection.title }}</a>
-        </li>
-        <li class="breadcrumb__item breadcrumb__separator" aria-hidden="true">/</li>
-      {% endif %}
-      <li class="breadcrumb__item breadcrumb__current">
-        <span aria-current="page">{{ product.title }}</span>
-      </li>
-
-    {% elsif template contains 'collection' %}
-      <li class="breadcrumb__item breadcrumb__separator" aria-hidden="true">/</li>
-      <li class="breadcrumb__item breadcrumb__current">
-        <span aria-current="page">{{ collection.title }}</span>
-      </li>
-
-    {% elsif template contains 'page' %}
-      <li class="breadcrumb__item breadcrumb__separator" aria-hidden="true">/</li>
-      <li class="breadcrumb__item breadcrumb__current">
-        <span aria-current="page">{{ page.title }}</span>
-      </li>
-
-    {% elsif template contains 'cart' %}
-      <li class="breadcrumb__item breadcrumb__separator" aria-hidden="true">/</li>
-      <li class="breadcrumb__item breadcrumb__current">
-        <span aria-current="page">Shopping Cart</span>
-      </li>
-
-    {% elsif template != 'index' %}
-      <li class="breadcrumb__item breadcrumb__separator" aria-hidden="true">/</li>
-      <li class="breadcrumb__item breadcrumb__current">
-        <span aria-current="page">{{ page_title }}</span>
-      </li>
-    {% endif %}
-  </ol>
-</nav>
-
-<style>
-  .breadcrumb__container {
-    margin: 1em 0;
-    font-size: 14px;
-    line-height: 1.5;
-    background-color: rgba(245, 245, 245, 0.7);
-    padding: 8px 12px;
-    border-radius: 4px;
-  }
-  .breadcrumb__list {
-    display: flex;
-    flex-wrap: wrap;
-    padding: 0;
-    margin: 0;
-    list-style: none;
-  }
-  .breadcrumb__item {
-    display: inline-flex;
-    align-items: center;
-  }
-  .breadcrumb__separator {
-    margin: 0 0.5em;
-    color: #999;
-  }
-  .breadcrumb__link {
-    color: #2a6496;
-    text-decoration: none;
-  }
-  .breadcrumb__link:hover {
-    text-decoration: underline;
-  }
-  .breadcrumb__current {
-    color: #333;
-    font-weight: 500;
-  }
-</style>
+{%- unless template == 'index' or template == 'cart' or template == '404' -%}
+  {%- if template contains 'product' -%}
+    {% render 'smart-breadcrumbs-product' %}
+  {%- elsif template contains 'collection' -%}
+    {% render 'smart-breadcrumbs-collection' %}
+  {%- else -%}
+    {% render 'smart-breadcrumbs-page' %}
+  {%- endif -%}
+{%- endunless -%}
 
 {% if debug_mode %}
 <!-- Inject debugging script -->
