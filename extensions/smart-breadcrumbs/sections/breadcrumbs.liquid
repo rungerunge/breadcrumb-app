@@ -1,0 +1,52 @@
+{% comment %}
+    Smart Breadcrumbs - Section
+    Version: 3.0.0
+    Direct implementation with error handling
+{% endcomment %}
+
+<div class="breadcrumbs-section" 
+     id="breadcrumbs-{{ section.id }}"
+     style="
+       margin-top: {{ section.settings.margin_top }}px;
+       margin-bottom: {{ section.settings.margin_bottom }}px;
+     ">
+  {% render 'smart-breadcrumbs' %}
+</div>
+
+{% schema %}
+{
+  "name": "Smart Breadcrumbs",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "margin_top",
+      "label": "Top Margin",
+      "min": 0,
+      "max": 60,
+      "step": 5,
+      "unit": "px",
+      "default": 15
+    },
+    {
+      "type": "range",
+      "id": "margin_bottom",
+      "label": "Bottom Margin",
+      "min": 0,
+      "max": 60,
+      "step": 5,
+      "unit": "px",
+      "default": 15
+    }
+  ],
+  "presets": [
+    {
+      "name": "Smart Breadcrumbs",
+      "category": "Navigation"
+    }
+  ]
+}
+{% endschema %} 

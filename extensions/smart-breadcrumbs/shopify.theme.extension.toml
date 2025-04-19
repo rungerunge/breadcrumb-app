@@ -1,8 +1,15 @@
 name = "Smart Breadcrumbs"
-version = "2.1.0"
+version = "3.0.0"
 type = "theme"
 
-[settings]
+# Theme extension settings
+[[extensions]]
+type = "section"
+name = "Smart Breadcrumbs"
+handle = "breadcrumbs"
+template = ["index", "product", "collection", "page", "cart", "blog", "article"]
+
+[[settings]]
   [[settings.input]]
     key = "fontSize"
     type = "number"
