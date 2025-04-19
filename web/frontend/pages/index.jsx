@@ -14,9 +14,7 @@ import {
   Link,
   Tabs,
   Frame,
-  Toast,
-  Spinner,
-  Text
+  Toast
 } from '@shopify/polaris';
 import { useAuthenticatedFetch } from '../hooks';
 
@@ -38,13 +36,11 @@ export default function HomePage() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState(null);
   const [toastActive, setToastActive] = useState(false);
   const [toastContent, setToastContent] = useState('');
   const [selectedTab, setSelectedTab] = useState(0);
-  const [connectionStatus, setConnectionStatus] = useState('checking');
-  const [retryCount, setRetryCount] = useState(0);
+  const [connectionStatus, setConnectionStatus] = useState('unknown');
 
   const tabs = [
     {
@@ -61,120 +57,37 @@ export default function HomePage() {
       id: 'help',
       content: 'Help',
       panelID: 'help-content',
-    },
-    {
-      id: 'debug',
-      content: 'Debug Info',
-      panelID: 'debug-info-content',
-    },
+    }
   ];
 
-  // Check server connectivity first with retry logic
+  // Try to load settings in the background but don't block the UI
   useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        await checkServerConnection();
-      } catch (err) {
-        console.error("Connection check failed", err);
-        
-        // Retry logic - wait 3 seconds and try again up to 3 times
-        if (retryCount < 3) {
-          console.log(`Retrying connection (${retryCount + 1}/3) in 3 seconds...`);
-          setTimeout(() => {
-            setRetryCount(prev => prev + 1);
-          }, 3000);
-        } else {
-          // If still failing after 3 retries, try a fallback approach
-          console.log("Retries exhausted, loading default settings");
-          setConnectionStatus('failed');
-          setSettings({
-            fontSize: 14,
-            marginTop: 20,
-            marginBottom: 20,
-            separator: '›',
-            mobileSlider: true,
-            menuHandles: 'main-menu',
-            customCssDesktop: '',
-            customCssMobile: '',
-            customCssAll: '',
-            customCssLast: '',
-            customCssHover: '',
-            globalOverride: false
-          });
-          setInitialLoading(false);
-        }
-      }
-    };
-    
-    checkConnection();
-  }, [retryCount]);
-
-  // Only load settings if connection is OK
-  useEffect(() => {
-    if (connectionStatus === 'connected') {
-      loadSettings();
-    }
-  }, [connectionStatus]);
-
-  const checkServerConnection = async () => {
-    try {
-      console.log("Checking server health...");
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5-second timeout
-      
-      const response = await fetch('/health', { signal: controller.signal });
-      clearTimeout(timeoutId);
-      
+    loadSettings();
+    // Try to check connection without blocking
+    fetch('/health').then(response => {
       if (response.ok) {
-        console.log("Server health check passed");
         setConnectionStatus('connected');
-        return true;
       } else {
-        console.error("Server health check failed with status:", response.status);
-        throw new Error(`Server returned ${response.status} status`);
+        setConnectionStatus('failed');
       }
-    } catch (err) {
-      console.error("Server connection error:", err);
-      if (err.name === 'AbortError') {
-        setError("Connection timed out. Server may be starting up, please wait.");
-      } else {
-        setError(`Cannot connect to server: ${err.message}`);
-      }
-      throw err;
-    }
-  };
+    }).catch(() => {
+      setConnectionStatus('failed');
+    });
+  }, []);
 
   const loadSettings = async () => {
     try {
-      console.log("Loading settings from API...");
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5-second timeout
+      const response = await fetch('/api/settings');
       
-      const response = await fetch('/api/settings', { signal: controller.signal });
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        throw new Error(`API returned ${response.status} ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      console.log("Settings loaded:", data);
-      
-      if (data && data.settings) {
-        setSettings(data.settings);
-      } else {
-        console.warn("Received empty or invalid settings from API");
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.settings) {
+          setSettings(data.settings);
+        }
       }
     } catch (error) {
       console.error('Error loading settings:', error);
-      if (error.name === 'AbortError') {
-        setError("Settings request timed out. Please try again.");
-      } else {
-        setError(`Failed to load settings: ${error.message}`);
-        showToast('Failed to load settings');
-      }
-    } finally {
-      setInitialLoading(false);
+      // Don't show errors to the user, just log them
     }
   };
 
@@ -192,11 +105,11 @@ export default function HomePage() {
       if (response.ok) {
         showToast('Settings saved successfully');
       } else {
-        throw new Error(`Failed to save settings: ${response.status} ${response.statusText}`);
+        throw new Error(`Failed to save settings`);
       }
     } catch (error) {
       console.error('Error saving settings:', error);
-      showToast(`Failed to save settings: ${error.message}`);
+      showToast(`Failed to save settings`);
     }
     setLoading(false);
   };
@@ -215,64 +128,6 @@ export default function HomePage() {
     <Toast content={toastContent} onDismiss={() => setToastActive(false)} />
   ) : null;
 
-  if (initialLoading) {
-    return (
-      <Frame>
-        <Page>
-          <Layout>
-            <Layout.Section>
-              <Card sectioned>
-                <Stack distribution="center" alignment="center" spacing="loose">
-                  <Spinner accessibilityLabel="Loading settings" size="large" />
-                  <Text variant="headingMd">Loading Smart Breadcrumbs Settings...</Text>
-                  {retryCount > 0 && (
-                    <Text variant="bodyMd">Retry attempt {retryCount}/3...</Text>
-                  )}
-                </Stack>
-              </Card>
-            </Layout.Section>
-          </Layout>
-        </Page>
-      </Frame>
-    );
-  }
-
-  if (error) {
-    return (
-      <Frame>
-        <Page title="Smart Breadcrumbs Settings">
-          <Layout>
-            <Layout.Section>
-              <Card sectioned>
-                <Banner
-                  title="There was a problem loading the app"
-                  status="critical"
-                >
-                  <p>{error}</p>
-                  <p>If this is the first time you're running the app, it may take a minute for the server to start.</p>
-                  <Stack distribution="center" spacing="tight">
-                    <Button primary onClick={() => window.location.reload()}>Reload Page</Button>
-                    <Button onClick={() => setRetryCount(0)}>Retry Connection</Button>
-                  </Stack>
-                </Banner>
-                
-                <div style={{marginTop: '20px'}}>
-                  <Card.Section title="Debug Information">
-                    <p>Connection Status: {connectionStatus}</p>
-                    <p>Error: {error}</p>
-                    <p>Retry Count: {retryCount}/3</p>
-                    <p>Time: {new Date().toLocaleString()}</p>
-                    <p>Host URL: {window.location.href}</p>
-                  </Card.Section>
-                </div>
-              </Card>
-            </Layout.Section>
-          </Layout>
-        </Page>
-      </Frame>
-    );
-  }
-
   return (
     <Frame>
       <Page
@@ -283,6 +138,16 @@ export default function HomePage() {
           loading: loading,
         }}
       >
+        {connectionStatus === 'failed' && (
+          <Banner
+            title="Connection Issue"
+            status="warning"
+            onDismiss={() => {}}
+          >
+            <p>There may be connection issues with the server. Settings may not save properly.</p>
+          </Banner>
+        )}
+        
         <Layout>
           <Layout.Section>
             <Card>
@@ -417,28 +282,6 @@ export default function HomePage() {
                       </TextContainer>
                     </Stack>
                   )}
-                  {selectedTab === 3 && (
-                    <Stack vertical>
-                      <TextContainer>
-                        <h2>Debug Information</h2>
-                        <pre style={{background: '#f4f6f8', padding: '10px', overflowX: 'auto'}}>
-                          {`Connection Status: ${connectionStatus}
-Server Timestamp: ${new Date().toISOString()}
-App Version: 2.0.0
-Settings Loaded: ${initialLoading ? 'No' : 'Yes'}
-Render.com URL: ${window.location.origin}
-API Endpoint: ${window.location.origin}/api/settings
-Health Endpoint: ${window.location.origin}/health
-`}
-                        </pre>
-                        <Stack distribution="leading" spacing="tight">
-                          <Button onClick={checkServerConnection}>Check Connection</Button>
-                          <Button onClick={loadSettings}>Reload Settings</Button>
-                          <Button onClick={() => window.location.reload()}>Reload Page</Button>
-                        </Stack>
-                      </TextContainer>
-                    </Stack>
-                  )}
                 </Card.Section>
               </Tabs>
             </Card>
@@ -458,11 +301,6 @@ Health Endpoint: ${window.location.origin}/health
                     Enable the mobile slider for better navigation on small
                     screens.
                   </p>
-                  {connectionStatus !== 'connected' && (
-                    <Banner status="warning">
-                      Server connection issues detected. Some features may not work correctly.
-                    </Banner>
-                  )}
                 </TextContainer>
               </Card.Section>
             </Card>
