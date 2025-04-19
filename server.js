@@ -71,9 +71,14 @@ let db;
 // Create the Shopify app configuration
 const shopifyAppConfig = {
   api: {
+    apiKey: process.env.SHOPIFY_API_KEY || '',
+    apiSecretKey: process.env.SHOPIFY_API_SECRET || '',
+    scopes: (process.env.SCOPES || '').split(','),
+    hostName: process.env.HOST ? process.env.HOST.replace(/https?:\/\//, '') : '',
+    hostScheme: process.env.HOST?.startsWith('https') ? 'https' : 'http',
     apiVersion: ApiVersion.October22,
+    isEmbeddedApp: true,
     restResources: {},
-    billing: undefined,
   },
   auth: {
     path: '/api/auth',
@@ -85,6 +90,7 @@ const shopifyAppConfig = {
   sessionStorage: new SQLiteSessionStorage('shopify.sqlite'),
 };
 
+// Initialize Shopify app middleware
 const shopify = shopifyApp(shopifyAppConfig);
 
 // Set up the health check endpoint before authentication
