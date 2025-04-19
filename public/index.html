@@ -4,11 +4,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartBreadcrumbs</title>
+    <link rel="stylesheet" href="https://unpkg.com/@shopify/polaris@12.10.0/build/esm/styles.css"/>
     <link rel="stylesheet" href="/styles.css">
     <script>
         // Check if we're in a Shopify iframe
         const isShopifyIframe = window.top !== window.self;
         
+        async function loadSettings() {
+            try {
+                const response = await fetch('/api/settings');
+                if (response.ok) {
+                    const settings = await response.json();
+                    document.getElementById('separator').value = settings.separator || '>';
+                    document.getElementById('showHome').checked = settings.showHome !== false;
+                    document.getElementById('customHomeText').value = settings.customHomeText || 'Home';
+                    document.getElementById('settings-container').style.display = 'block';
+                    document.getElementById('loading-container').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+
+        async function saveSettings() {
+            const saveButton = document.getElementById('save-button');
+            const originalText = saveButton.textContent;
+            saveButton.textContent = 'Saving...';
+            saveButton.disabled = true;
+
+            try {
+                const settings = {
+                    separator: document.getElementById('separator').value,
+                    showHome: document.getElementById('showHome').checked,
+                    customHomeText: document.getElementById('customHomeText').value
+                };
+
+                const response = await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+
+                if (response.ok) {
+                    showToast('Settings saved successfully!');
+                } else {
+                    showToast('Error saving settings', true);
+                }
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                showToast('Error saving settings', true);
+            }
+
+            saveButton.textContent = originalText;
+            saveButton.disabled = false;
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${isError ? 'error' : 'success'}`;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
         window.addEventListener('load', function() {
             // If we're not in the auth process (no auth query params)
             if (!window.location.search.includes('hmac=') && !window.location.search.includes('shop=')) {
@@ -20,17 +82,75 @@
                 if (shop) {
                     window.location.href = `/api/auth?shop=${shop}`;
                 }
+            } else {
+                // If we're authenticated, load settings
+                loadSettings();
             }
         });
     </script>
 </head>
 <body>
     <div id="app">
-        <div class="app-container">
+        <div id="loading-container" class="app-container">
             <h1>SmartBreadcrumbs</h1>
             <div class="loading-spinner"></div>
-            <p>Initializing app...</p>
+            <p>Loading settings...</p>
         </div>
+
+        <div id="settings-container" class="app-container" style="display: none;">
+            <div class="Polaris-Page">
+                <div class="Polaris-Page-Header Polaris-Page-Header--separator">
+                    <h1 class="Polaris-Header-Title">SmartBreadcrumbs Settings</h1>
+                </div>
+                
+                <div class="Polaris-Layout">
+                    <div class="Polaris-Layout__Section">
+                        <div class="Polaris-Card">
+                            <div class="Polaris-Card__Section">
+                                <div class="Polaris-FormLayout">
+                                    <div class="Polaris-FormLayout__Item">
+                                        <div class="Polaris-Labelled__LabelWrapper">
+                                            <label class="Polaris-Label">Separator</label>
+                                        </div>
+                                        <input id="separator" class="Polaris-TextField__Input" type="text" value=">" />
+                                        <div class="Polaris-Labelled__HelpText">
+                                            The symbol used to separate breadcrumb items
+                                        </div>
+                                    </div>
+
+                                    <div class="Polaris-FormLayout__Item">
+                                        <label class="Polaris-Choice" for="showHome">
+                                            <input type="checkbox" id="showHome" class="Polaris-Checkbox__Input" checked />
+                                            <span class="Polaris-Choice__Label">Show Home Link</span>
+                                        </label>
+                                        <div class="Polaris-Labelled__HelpText">
+                                            Display a link to the home page at the start of the breadcrumb
+                                        </div>
+                                    </div>
+
+                                    <div class="Polaris-FormLayout__Item">
+                                        <div class="Polaris-Labelled__LabelWrapper">
+                                            <label class="Polaris-Label">Home Link Text</label>
+                                        </div>
+                                        <input id="customHomeText" class="Polaris-TextField__Input" type="text" value="Home" />
+                                        <div class="Polaris-Labelled__HelpText">
+                                            The text to display for the home link
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="Polaris-Card__Section">
+                                <button id="save-button" class="Polaris-Button Polaris-Button--primary" onclick="saveSettings()">
+                                    <span class="Polaris-Button__Content">Save Settings</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="toast" class="toast" style="display: none;"></div>
     </div>
 </body>
 </html> 

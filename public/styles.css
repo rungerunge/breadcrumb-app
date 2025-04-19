@@ -9,6 +9,9 @@ body {
     max-width: 800px;
     margin: 40px auto;
     padding: 20px;
+}
+
+#loading-container {
     background: white;
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -38,4 +41,73 @@ p {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* Toast Notifications */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 16px 24px;
+    border-radius: 4px;
+    color: white;
+    font-weight: 500;
+    z-index: 1000;
+    animation: slideIn 0.3s ease-out;
+}
+
+.toast.success {
+    background-color: #008060;
+}
+
+.toast.error {
+    background-color: #d82c0d;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Polaris Customizations */
+.Polaris-Card {
+    margin-bottom: 20px;
+}
+
+.Polaris-FormLayout__Item {
+    margin-bottom: 20px;
+}
+
+.Polaris-TextField__Input {
+    width: 100%;
+    max-width: 300px;
+}
+
+.Polaris-Choice {
+    margin-bottom: 10px;
+}
+
+.Polaris-Button--primary {
+    background-color: #008060;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.Polaris-Button--primary:hover {
+    background-color: #006e52;
+}
+
+.Polaris-Button--primary:disabled {
+    background-color: #f1f1f1;
+    cursor: not-allowed;
 } 
