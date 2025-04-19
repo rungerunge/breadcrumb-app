@@ -10,5 +10,23 @@
       "menu_handles_label": "Menu Handles",
       "menu_handles_info": "Comma-separated menu handles. Use * as wildcard."
     }
+  },
+  "general": {
+    "breadcrumbs": {
+      "home": "Home",
+      "collection": "Collection",
+      "product": "Product",
+      "search": "Search Results",
+      "page": "Page",
+      "blog": "Blog",
+      "article": "Article"
+    }
+  },
+  "errors": {
+    "breadcrumbs": {
+      "product_not_found": "Product not found",
+      "collection_not_found": "Collection not found",
+      "page_not_found": "Page not found"
+    }
   }
 } 

@@ -1,6 +1,56 @@
-name = "SmartBreadcrumbs"
+name = "Smart Breadcrumbs"
+version = "2.0.0"
 type = "theme"
-description = "Dynamic breadcrumb navigation for Shopify themes"
+
+[settings]
+  [[settings.input]]
+    key = "breadcrumb_font_size"
+    type = "number"
+    label = "Font Size (px)"
+    default = 14
+    
+  [[settings.input]]
+    key = "breadcrumb_mobile_font_size"
+    type = "number"
+    label = "Mobile Font Size (px)"
+    default = 12
+    
+  [[settings.input]]
+    key = "breadcrumb_color"
+    type = "color"
+    label = "Text Color"
+    default = "#666666"
+    
+  [[settings.input]]
+    key = "breadcrumb_hover_color"
+    type = "color"
+    label = "Hover Color"
+    default = "#000000"
+    
+  [[settings.input]]
+    key = "breadcrumb_separator_color"
+    type = "color"
+    label = "Separator Color"
+    default = "#999999"
+    
+  [[settings.input]]
+    key = "breadcrumb_current_color"
+    type = "color"
+    label = "Current Page Color"
+    default = "#333333"
+    
+  [[settings.input]]
+    key = "enable_mobile_slider"
+    type = "boolean"
+    label = "Enable Mobile Slider"
+    default = true
+    
+  [[settings.input]]
+    key = "menu_handles"
+    type = "text"
+    label = "Menu Handles"
+    default = "main-menu"
+    info = "Comma-separated menu handles. Use * as wildcard."
 
 [[extensions]]
 name = "Smart Breadcrumbs"
