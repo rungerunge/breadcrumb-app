@@ -1,20 +1,49 @@
 {% comment %}
     Smart Breadcrumbs - Main Snippet
-    Version: 2.1.4
-    
-    This snippet generates breadcrumbs based on your Shopify navigation menus
-    and handles product pages with proper collection context.
+    Version: 2.1.5
+    Debug Mode: Enabled
 {% endcomment %}
+
+{% assign debug = true %}
+{% if debug %}
+  <style>
+    .debug-info {
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin: 10px 0;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .debug-info pre {
+      margin: 0;
+      white-space: pre-wrap;
+    }
+  </style>
+  <div class="debug-info">
+    <pre>
+Template: {{ template | json }}
+Request Path: {{ request.path | json }}
+Collection: {{ collection | json }}
+Product: {{ product | json }}
+Current Tags: {{ current_tags | json }}
+Page Title: {{ page_title | json }}
+Shop: {{ shop.url | json }}
+    </pre>
+  </div>
+{% endif %}
 
 {%- style -%}
 .smart-breadcrumbs {
-    display: flex;
+    display: flex !important; /* Force display during development */
     flex-wrap: wrap;
     align-items: center;
     padding: {{ settings.marginTop | default: 20 }}px 0 {{ settings.marginBottom | default: 20 }}px;
     margin: 0;
     list-style: none;
     font-size: {{ settings.fontSize | default: 14 }}px;
+    background: {{ settings.background_color | default: 'transparent' }};
 }
 
 .smart-breadcrumbs__list {
@@ -36,20 +65,24 @@
     color: var(--breadcrumb-color, #666);
     text-decoration: none;
     transition: color 0.2s ease;
+    opacity: 1 !important; /* Force visibility */
 }
 
 .smart-breadcrumbs__link:hover {
     color: var(--breadcrumb-hover-color, #000);
+    text-decoration: underline;
 }
 
 .smart-breadcrumbs__separator {
     margin: 0 8px;
     color: var(--breadcrumb-separator-color, #999);
+    opacity: 1 !important; /* Force visibility */
 }
 
 .smart-breadcrumbs__current {
     color: var(--breadcrumb-current-color, #333);
     font-weight: 500;
+    opacity: 1 !important; /* Force visibility */
 }
 
 {% if settings.customCssAll != blank %}
@@ -90,7 +123,7 @@
 }
 {%- endstyle -%}
 
-<nav class="smart-breadcrumbs" aria-label="breadcrumb">
+<nav class="smart-breadcrumbs" aria-label="breadcrumb" style="display: block !important;">
   <ol class="smart-breadcrumbs__list">
     {% comment %}Always show Home link{% endcomment %}
     <li class="smart-breadcrumbs__item">
@@ -165,13 +198,16 @@
   </ol>
 </nav>
 
-{% comment %}Debug information (hidden in production){% endcomment %}
-{% if settings.debug_mode %}
-  <div style="display: none;">
-    <p>Debug Information:</p>
-    <p>Template: {{ template }}</p>
-    <p>Collection: {{ collection.title }}</p>
-    <p>Product Collections: {{ product.collections | map: 'title' | join: ', ' }}</p>
-    <p>Current Tags: {{ current_tags | join: ', ' }}</p>
-  </div>
+{% comment %}Advanced debug information{% endcomment %}
+{% if debug %}
+  <script>
+    console.group('Smart Breadcrumbs Debug Info');
+    console.log('Template:', {{ template | json }});
+    console.log('Request Path:', {{ request.path | json }});
+    console.log('Collection:', {{ collection | json }});
+    console.log('Product:', {{ product | json }});
+    console.log('Current Tags:', {{ current_tags | json }});
+    console.log('Page Title:', {{ page_title | json }});
+    console.groupEnd();
+  </script>
 {% endif %} 
