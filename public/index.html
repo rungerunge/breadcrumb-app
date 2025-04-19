@@ -7,24 +7,42 @@
     <link rel="stylesheet" href="https://unpkg.com/@shopify/polaris@12.10.0/build/esm/styles.css"/>
     <link rel="stylesheet" href="/styles.css">
     <script>
+        // Debug logging
+        const debug = {
+            log: function(...args) { console.log("[App]", ...args); },
+            error: function(...args) { console.error("[App]", ...args); },
+            warn: function(...args) { console.warn("[App]", ...args); },
+            auth: function(...args) { console.log("[Auth]", ...args); }
+        };
+
         // Check if we're in a Shopify iframe
         const isShopifyIframe = window.top !== window.self;
+        debug.log("Is in Shopify iframe:", isShopifyIframe);
         
         function getShopOrigin() {
             // Check URL params first
             const params = new URLSearchParams(window.location.search);
             const shop = params.get('shop');
-            if (shop) return shop;
+            if (shop) {
+                debug.auth("Found shop in URL params:", shop);
+                return shop;
+            }
 
             // If no shop in URL, try to get from hostname for embedded apps
             if (isShopifyIframe) {
-                const hostName = window.location.ancestorOrigins?.[0] || 
-                               document.referrer;
+                const hostName = window.location.ancestorOrigins?.[0] || document.referrer;
                 if (hostName) {
-                    const url = new URL(hostName);
-                    return url.hostname;
+                    try {
+                        const url = new URL(hostName);
+                        debug.auth("Found shop from ancestor origin:", url.hostname);
+                        return url.hostname;
+                    } catch (error) {
+                        debug.error("Error parsing ancestor origin:", error);
+                    }
                 }
             }
+            
+            debug.warn("No shop found in any source");
             return null;
         }
 
@@ -32,6 +50,8 @@
             const shop = getShopOrigin();
             if (shop) {
                 const redirectUrl = `/api/auth?shop=${shop}`;
+                debug.auth(`Redirecting to auth: ${redirectUrl}`);
+                
                 if (isShopifyIframe) {
                     window.top.location.href = redirectUrl;
                 } else {
@@ -42,77 +62,125 @@
             }
         }
 
+        function showToast(message, isError = false) {
+            const toast = document.createElement('div');
+            toast.className = `toast ${isError ? 'error' : 'success'}`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            // Automatically remove the toast after 3 seconds
+            setTimeout(() => {
+                toast.classList.add('fade-out');
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 500);
+            }, 3000);
+        }
+
+        async function fetchWithAuth(url, options = {}) {
+            try {
+                debug.log(`Fetching ${url}`);
+                const response = await fetch(url, options);
+                
+                if (response.status === 401) {
+                    debug.auth("Unauthorized request, redirecting to auth");
+                    redirectToAuth();
+                    return null;
+                }
+                
+                return response;
+            } catch (error) {
+                debug.error(`Fetch error for ${url}:`, error);
+                showToast(`Network error: ${error.message}`, true);
+                return null;
+            }
+        }
+
         async function loadSettings() {
             try {
-                const response = await fetch('/api/settings');
-                if (response.ok) {
-                    const settings = await response.json();
-                    // Font Size
-                    document.getElementById('fontSize').value = settings.fontSize || '14';
-                    document.getElementById('fontSizeEnabled').checked = settings.fontSizeEnabled || false;
-                    
-                    // Mobile Slider
-                    document.getElementById('useSlider').checked = settings.useSlider || false;
-                    document.getElementById('useSliderEnabled').checked = settings.useSliderEnabled || false;
-                    
-                    // Margins
-                    document.getElementById('marginTop').value = settings.marginTop || '0';
-                    document.getElementById('marginTopEnabled').checked = settings.marginTopEnabled || false;
-                    document.getElementById('marginBottom').value = settings.marginBottom || '0';
-                    document.getElementById('marginBottomEnabled').checked = settings.marginBottomEnabled || false;
-                    
-                    // Separator
-                    document.getElementById('separator').value = settings.separator || '>';
-                    document.getElementById('separatorEnabled').checked = settings.separatorEnabled || false;
-                    
-                    // CSS Fields
-                    document.getElementById('desktopCSS').value = settings.desktopCSS || '';
-                    document.getElementById('desktopCSSEnabled').checked = settings.desktopCSSEnabled || false;
-                    document.getElementById('mobileCSS').value = settings.mobileCSS || '';
-                    document.getElementById('mobileCSSEnabled').checked = settings.mobileCSSEnabled || false;
-                    document.getElementById('allBreadcrumbsCSS').value = settings.allBreadcrumbsCSS || '';
-                    document.getElementById('allBreadcrumbsCSSEnabled').checked = settings.allBreadcrumbsCSSEnabled || false;
-                    document.getElementById('lastBreadcrumbCSS').value = settings.lastBreadcrumbCSS || '';
-                    document.getElementById('lastBreadcrumbCSSEnabled').checked = settings.lastBreadcrumbCSSEnabled || false;
-                    document.getElementById('hoverCSS').value = settings.hoverCSS || '';
-                    document.getElementById('hoverCSSEnabled').checked = settings.hoverCSSEnabled || false;
-                    
-                    // Menu Handles
-                    document.getElementById('menuHandles').value = settings.menuHandles || '*';
-                    document.getElementById('menuHandlesEnabled').checked = settings.menuHandlesEnabled || false;
+                debug.log("Loading settings");
+                document.getElementById('loading-container').style.display = 'block';
+                document.getElementById('settings-container').style.display = 'none';
+                
+                const response = await fetchWithAuth('/api/settings');
+                if (!response || !response.ok) {
+                    throw new Error(`Failed to load settings: ${response?.status} ${response?.statusText}`);
+                }
+                
+                const settings = await response.json();
+                debug.log("Settings loaded:", settings);
+                
+                // Font Size
+                document.getElementById('fontSize').value = settings.fontSize || '14';
+                document.getElementById('fontSizeEnabled').checked = settings.fontSizeEnabled || false;
+                
+                // Mobile Slider
+                document.getElementById('useSlider').checked = settings.useSlider || false;
+                document.getElementById('useSliderEnabled').checked = settings.useSliderEnabled || false;
+                
+                // Margins
+                document.getElementById('marginTop').value = settings.marginTop || '0';
+                document.getElementById('marginTopEnabled').checked = settings.marginTopEnabled || false;
+                document.getElementById('marginBottom').value = settings.marginBottom || '0';
+                document.getElementById('marginBottomEnabled').checked = settings.marginBottomEnabled || false;
+                
+                // Separator
+                document.getElementById('separator').value = settings.separator || '>';
+                document.getElementById('separatorEnabled').checked = settings.separatorEnabled || false;
+                
+                // CSS Fields
+                document.getElementById('desktopCSS').value = settings.desktopCSS || '';
+                document.getElementById('desktopCSSEnabled').checked = settings.desktopCSSEnabled || false;
+                document.getElementById('mobileCSS').value = settings.mobileCSS || '';
+                document.getElementById('mobileCSSEnabled').checked = settings.mobileCSSEnabled || false;
+                document.getElementById('allBreadcrumbsCSS').value = settings.allBreadcrumbsCSS || '';
+                document.getElementById('allBreadcrumbsCSSEnabled').checked = settings.allBreadcrumbsCSSEnabled || false;
+                document.getElementById('lastBreadcrumbCSS').value = settings.lastBreadcrumbCSS || '';
+                document.getElementById('lastBreadcrumbCSSEnabled').checked = settings.lastBreadcrumbCSSEnabled || false;
+                document.getElementById('hoverCSS').value = settings.hoverCSS || '';
+                document.getElementById('hoverCSSEnabled').checked = settings.hoverCSSEnabled || false;
+                
+                // Menu Handles
+                document.getElementById('menuHandles').value = settings.menuHandles || '*';
+                document.getElementById('menuHandlesEnabled').checked = settings.menuHandlesEnabled || false;
 
-                    document.getElementById('settings-container').style.display = 'block';
-                    document.getElementById('loading-container').style.display = 'none';
-                }
+                document.getElementById('settings-container').style.display = 'block';
+                document.getElementById('loading-container').style.display = 'none';
             } catch (error) {
-                console.error('Error loading settings:', error);
-                if (error.name === 'TypeError' || (error.response && error.response.status === 401)) {
-                    // If we get an authentication error, redirect to auth
-                    redirectToAuth();
-                } else {
-                    showToast('Error loading settings', true);
-                }
+                debug.error('Error loading settings:', error);
+                document.getElementById('loading-container').style.display = 'none';
+                document.getElementById('error-container').style.display = 'block';
+                document.getElementById('error-message').textContent = error.message;
             }
         }
 
         async function saveSettings() {
-            const saveButton = document.getElementById('save-button');
-            const originalText = saveButton.textContent;
-            saveButton.textContent = 'Saving...';
-            saveButton.disabled = true;
-
             try {
+                const saveButton = document.getElementById('saveButton');
+                saveButton.disabled = true;
+                saveButton.textContent = 'Saving...';
+                
                 const settings = {
+                    // Font Size
                     fontSize: document.getElementById('fontSize').value,
                     fontSizeEnabled: document.getElementById('fontSizeEnabled').checked,
+                    
+                    // Mobile Slider
                     useSlider: document.getElementById('useSlider').checked,
                     useSliderEnabled: document.getElementById('useSliderEnabled').checked,
+                    
+                    // Margins
                     marginTop: document.getElementById('marginTop').value,
                     marginTopEnabled: document.getElementById('marginTopEnabled').checked,
                     marginBottom: document.getElementById('marginBottom').value,
                     marginBottomEnabled: document.getElementById('marginBottomEnabled').checked,
+                    
+                    // Separator
                     separator: document.getElementById('separator').value,
                     separatorEnabled: document.getElementById('separatorEnabled').checked,
+                    
+                    // CSS Fields
                     desktopCSS: document.getElementById('desktopCSS').value,
                     desktopCSSEnabled: document.getElementById('desktopCSSEnabled').checked,
                     mobileCSS: document.getElementById('mobileCSS').value,
@@ -123,290 +191,376 @@
                     lastBreadcrumbCSSEnabled: document.getElementById('lastBreadcrumbCSSEnabled').checked,
                     hoverCSS: document.getElementById('hoverCSS').value,
                     hoverCSSEnabled: document.getElementById('hoverCSSEnabled').checked,
+                    
+                    // Menu Handles
                     menuHandles: document.getElementById('menuHandles').value,
-                    menuHandlesEnabled: document.getElementById('menuHandlesEnabled').checked
+                    menuHandlesEnabled: document.getElementById('menuHandlesEnabled').checked,
                 };
-
-                const response = await fetch('/api/settings', {
+                
+                debug.log("Saving settings:", settings);
+                
+                const response = await fetchWithAuth('/api/settings', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(settings)
                 });
-
-                if (response.ok) {
-                    showToast('Settings saved successfully!');
-                } else {
-                    showToast('Error saving settings', true);
+                
+                if (!response || !response.ok) {
+                    throw new Error(`Failed to save settings: ${response?.status} ${response?.statusText}`);
                 }
+                
+                showToast('Settings saved successfully');
             } catch (error) {
-                console.error('Error saving settings:', error);
-                showToast('Error saving settings', true);
+                debug.error('Error saving settings:', error);
+                showToast('Error saving settings: ' + error.message, true);
+            } finally {
+                const saveButton = document.getElementById('saveButton');
+                saveButton.disabled = false;
+                saveButton.textContent = 'Save Settings';
             }
-
-            saveButton.textContent = originalText;
-            saveButton.disabled = false;
         }
 
-        function showToast(message, isError = false) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.className = `toast ${isError ? 'error' : 'success'}`;
-            toast.style.display = 'block';
-            setTimeout(() => {
-                toast.style.display = 'none';
-            }, 3000);
-        }
-
+        // Initialize the app
         window.addEventListener('load', function() {
+            debug.log("App initialized");
+            
             // Try to load settings first
             loadSettings().catch(error => {
-                console.error('Failed to load settings:', error);
+                debug.error('Failed to load settings:', error);
                 // If loading fails, check if we need to authenticate
                 if (!window.location.search.includes('hmac=')) {
                     redirectToAuth();
                 }
             });
+            
+            // Add event listeners for form interactions
+            document.getElementById('saveButton').addEventListener('click', saveSettings);
+            
+            // Add reload button event listener
+            document.getElementById('reloadButton').addEventListener('click', function() {
+                document.getElementById('error-container').style.display = 'none';
+                loadSettings();
+            });
+            
+            // Add auth button event listener
+            document.getElementById('authButton').addEventListener('click', function() {
+                redirectToAuth();
+            });
         });
     </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #202223;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 0 1px rgba(63, 63, 68, 0.05), 0 1px 3px 0 rgba(63, 63, 68, 0.15);
+            margin-bottom: 16px;
+            padding: 16px;
+        }
+        
+        .card h2 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 16px;
+            border-bottom: 1px solid #e1e3e5;
+            padding-bottom: 12px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        input[type="text"], 
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #c4cdd5;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        textarea {
+            min-height: 100px;
+            font-family: monospace;
+        }
+        
+        button {
+            background-color: #008060;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        button:hover {
+            background-color: #006e52;
+        }
+        
+        button:disabled {
+            background-color: #9c9c9c;
+            cursor: not-allowed;
+        }
+        
+        .settings-section {
+            margin-bottom: 24px;
+        }
+        
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .checkbox-wrapper input[type="checkbox"] {
+            margin-right: 8px;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 4px;
+            color: white;
+            z-index: 1000;
+            opacity: 0.9;
+            transition: opacity 0.5s;
+        }
+        
+        .toast.success {
+            background-color: #008060;
+        }
+        
+        .toast.error {
+            background-color: #d82c0d;
+        }
+        
+        .toast.fade-out {
+            opacity: 0;
+        }
+        
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #008060;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 40px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .loading-container, .error-container {
+            text-align: center;
+            padding: 40px 0;
+        }
+        
+        .error-container {
+            color: #d82c0d;
+            display: none;
+        }
+        
+        .help-text {
+            color: #637381;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+    </style>
 </head>
 <body>
-    <div id="app">
-        <div id="loading-container" class="app-container">
-            <h1>SmartBreadcrumbs</h1>
+    <div class="container">
+        <h1>SmartBreadcrumbs Settings</h1>
+        
+        <div id="loading-container" class="loading-container">
             <div class="loading-spinner"></div>
             <p>Loading settings...</p>
         </div>
-
-        <div id="settings-container" class="app-container" style="display: none;">
-            <div class="Polaris-Page">
-                <div class="Polaris-Page-Header Polaris-Page-Header--separator">
-                    <h1 class="Polaris-Header-Title">SmartBreadcrumbs Settings</h1>
-                </div>
-
-                <div class="Polaris-Layout">
-                    <div class="Polaris-Layout__Section">
-                        <!-- Help Section -->
-                        <div class="Polaris-Card">
-                            <div class="Polaris-Card__Section">
-                                <h2>Instructions</h2>
-                                <p>1. Place and configure the "SmartBreadcrumbs" app block in your theme editor.</p>
-                                <p>2. Check the breadcrumb path on your product pages.</p>
-                                <p>3. (Optional) Use global settings below to override individual block settings.</p>
-                                <div class="Polaris-ButtonGroup">
-                                    <button class="Polaris-Button" onclick="window.open('https://www.youtube.com/watch?v=tutorial', '_blank')">
-                                        <span class="Polaris-Button__Content">Watch Tutorial</span>
-                                    </button>
-                                    <button class="Polaris-Button" onclick="window.open('/faq', '_blank')">
-                                        <span class="Polaris-Button__Content">Open FAQ</span>
-                                    </button>
-                                    <button class="Polaris-Button" onclick="window.location.href='mailto:support@example.com'">
-                                        <span class="Polaris-Button__Content">Email Support</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Basic Settings -->
-                        <div class="Polaris-Card">
-                            <div class="Polaris-Card__Header">
-                                <h2 class="Polaris-Heading">Basic Settings</h2>
-                            </div>
-                            <div class="Polaris-Card__Section">
-                                <div class="Polaris-FormLayout">
-                                    <!-- Font Size -->
-                                    <div class="Polaris-FormLayout__Item">
-                                        <div class="setting-row">
-                                            <label class="Polaris-Choice" for="fontSizeEnabled">
-                                                <input type="checkbox" id="fontSizeEnabled" class="Polaris-Checkbox__Input" />
-                                                <span class="Polaris-Choice__Label">Enable Global Font Size</span>
-                                            </label>
-                                            <div class="Polaris-Labelled__LabelWrapper">
-                                                <label class="Polaris-Label">Font Size (px)</label>
-                                            </div>
-                                            <input type="number" id="fontSize" class="Polaris-TextField__Input" value="14" />
-                                        </div>
-                                    </div>
-
-                                    <!-- Mobile Slider -->
-                                    <div class="Polaris-FormLayout__Item">
-                                        <div class="setting-row">
-                                            <label class="Polaris-Choice" for="useSliderEnabled">
-                                                <input type="checkbox" id="useSliderEnabled" class="Polaris-Checkbox__Input" />
-                                                <span class="Polaris-Choice__Label">Enable Global Mobile Slider</span>
-                                            </label>
-                                            <label class="Polaris-Choice" for="useSlider">
-                                                <input type="checkbox" id="useSlider" class="Polaris-Checkbox__Input" />
-                                                <span class="Polaris-Choice__Label">Use Slider on Mobile</span>
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    <!-- Margins -->
-                                    <div class="Polaris-FormLayout__Item">
-                                        <div class="setting-row">
-                                            <label class="Polaris-Choice" for="marginTopEnabled">
-                                                <input type="checkbox" id="marginTopEnabled" class="Polaris-Checkbox__Input" />
-                                                <span class="Polaris-Choice__Label">Enable Global Top Margin</span>
-                                            </label>
-                                            <div class="Polaris-Labelled__LabelWrapper">
-                                                <label class="Polaris-Label">Margin Top (px)</label>
-                                            </div>
-                                            <input type="number" id="marginTop" class="Polaris-TextField__Input" value="0" />
-                                        </div>
-                                    </div>
-
-                                    <div class="Polaris-FormLayout__Item">
-                                        <div class="setting-row">
-                                            <label class="Polaris-Choice" for="marginBottomEnabled">
-                                                <input type="checkbox" id="marginBottomEnabled" class="Polaris-Checkbox__Input" />
-                                                <span class="Polaris-Choice__Label">Enable Global Bottom Margin</span>
-                                            </label>
-                                            <div class="Polaris-Labelled__LabelWrapper">
-                                                <label class="Polaris-Label">Margin Bottom (px)</label>
-                                            </div>
-                                            <input type="number" id="marginBottom" class="Polaris-TextField__Input" value="0" />
-                                        </div>
-                                    </div>
-
-                                    <!-- Separator -->
-                                    <div class="Polaris-FormLayout__Item">
-                                        <div class="setting-row">
-                                            <label class="Polaris-Choice" for="separatorEnabled">
-                                                <input type="checkbox" id="separatorEnabled" class="Polaris-Checkbox__Input" />
-                                                <span class="Polaris-Choice__Label">Enable Global Separator</span>
-                                            </label>
-                                            <div class="Polaris-Labelled__LabelWrapper">
-                                                <label class="Polaris-Label">Breadcrumb Separator (HTML)</label>
-                                            </div>
-                                            <input type="text" id="separator" class="Polaris-TextField__Input" value=">" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- CSS Customization -->
-                        <div class="Polaris-Card">
-                            <div class="Polaris-Card__Header">
-                                <h2 class="Polaris-Heading">CSS Customization</h2>
-                            </div>
-                            <div class="Polaris-Card__Section">
-                                <div class="Polaris-FormLayout">
-                                    <!-- Desktop/Tablet CSS -->
-                                    <div class="Polaris-FormLayout__Item">
-                                        <div class="setting-row">
-                                            <label class="Polaris-Choice" for="desktopCSSEnabled">
-                                                <input type="checkbox" id="desktopCSSEnabled" class="Polaris-Checkbox__Input" />
-                                                <span class="Polaris-Choice__Label">Enable Global Desktop/Tablet CSS</span>
-                                            </label>
-                                            <div class="Polaris-Labelled__LabelWrapper">
-                                                <label class="Polaris-Label">Desktop/Tablet CSS</label>
-                                            </div>
-                                            <textarea id="desktopCSS" class="Polaris-TextField__Input" rows="4"></textarea>
-                                        </div>
-                                    </div>
-
-                                    <!-- Mobile CSS -->
-                                    <div class="Polaris-FormLayout__Item">
-                                        <div class="setting-row">
-                                            <label class="Polaris-Choice" for="mobileCSSEnabled">
-                                                <input type="checkbox" id="mobileCSSEnabled" class="Polaris-Checkbox__Input" />
-                                                <span class="Polaris-Choice__Label">Enable Global Mobile CSS</span>
-                                            </label>
-                                            <div class="Polaris-Labelled__LabelWrapper">
-                                                <label class="Polaris-Label">Mobile CSS</label>
-                                            </div>
-                                            <textarea id="mobileCSS" class="Polaris-TextField__Input" rows="4"></textarea>
-                                        </div>
-                                    </div>
-
-                                    <!-- All Breadcrumbs CSS -->
-                                    <div class="Polaris-FormLayout__Item">
-                                        <div class="setting-row">
-                                            <label class="Polaris-Choice" for="allBreadcrumbsCSSEnabled">
-                                                <input type="checkbox" id="allBreadcrumbsCSSEnabled" class="Polaris-Checkbox__Input" />
-                                                <span class="Polaris-Choice__Label">Enable Global All Breadcrumbs CSS</span>
-                                            </label>
-                                            <div class="Polaris-Labelled__LabelWrapper">
-                                                <label class="Polaris-Label">All Breadcrumbs CSS</label>
-                                            </div>
-                                            <textarea id="allBreadcrumbsCSS" class="Polaris-TextField__Input" rows="4"></textarea>
-                                        </div>
-                                    </div>
-
-                                    <!-- Last Breadcrumb CSS -->
-                                    <div class="Polaris-FormLayout__Item">
-                                        <div class="setting-row">
-                                            <label class="Polaris-Choice" for="lastBreadcrumbCSSEnabled">
-                                                <input type="checkbox" id="lastBreadcrumbCSSEnabled" class="Polaris-Checkbox__Input" />
-                                                <span class="Polaris-Choice__Label">Enable Global Last Breadcrumb CSS</span>
-                                            </label>
-                                            <div class="Polaris-Labelled__LabelWrapper">
-                                                <label class="Polaris-Label">Last Breadcrumb CSS</label>
-                                            </div>
-                                            <textarea id="lastBreadcrumbCSS" class="Polaris-TextField__Input" rows="4"></textarea>
-                                        </div>
-                                    </div>
-
-                                    <!-- Hover CSS -->
-                                    <div class="Polaris-FormLayout__Item">
-                                        <div class="setting-row">
-                                            <label class="Polaris-Choice" for="hoverCSSEnabled">
-                                                <input type="checkbox" id="hoverCSSEnabled" class="Polaris-Checkbox__Input" />
-                                                <span class="Polaris-Choice__Label">Enable Global Hover CSS</span>
-                                            </label>
-                                            <div class="Polaris-Labelled__LabelWrapper">
-                                                <label class="Polaris-Label">Hover CSS</label>
-                                            </div>
-                                            <textarea id="hoverCSS" class="Polaris-TextField__Input" rows="4"></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Menu Configuration -->
-                        <div class="Polaris-Card">
-                            <div class="Polaris-Card__Header">
-                                <h2 class="Polaris-Heading">Menu Configuration</h2>
-                            </div>
-                            <div class="Polaris-Card__Section">
-                                <div class="Polaris-FormLayout">
-                                    <div class="Polaris-FormLayout__Item">
-                                        <div class="setting-row">
-                                            <label class="Polaris-Choice" for="menuHandlesEnabled">
-                                                <input type="checkbox" id="menuHandlesEnabled" class="Polaris-Checkbox__Input" />
-                                                <span class="Polaris-Choice__Label">Enable Global Menu Handles</span>
-                                            </label>
-                                            <div class="Polaris-Labelled__LabelWrapper">
-                                                <label class="Polaris-Label">Menu Handles</label>
-                                                <div class="Polaris-Labelled__HelpText">
-                                                    Comma-separated menu handles (use * for all)
-                                                </div>
-                                            </div>
-                                            <input type="text" id="menuHandles" class="Polaris-TextField__Input" value="*" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Save Button -->
-                        <div class="Polaris-Card">
-                            <div class="Polaris-Card__Section">
-                                <button id="save-button" class="Polaris-Button Polaris-Button--primary" onclick="saveSettings()">
-                                    <span class="Polaris-Button__Content">Save Settings</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        
+        <div id="error-container" class="error-container">
+            <h2>Error Loading Settings</h2>
+            <p id="error-message">Unable to load settings</p>
+            <div>
+                <button id="reloadButton">Try Again</button>
+                <button id="authButton">Authenticate</button>
             </div>
         </div>
-
-        <div id="toast" class="toast" style="display: none;"></div>
+        
+        <div id="settings-container" style="display: none;">
+            <div class="card">
+                <h2>Breadcrumb Appearance</h2>
+                
+                <div class="form-group">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="fontSizeEnabled">
+                        <label for="fontSizeEnabled">Enable Font Size Override</label>
+                    </div>
+                    <input type="number" id="fontSize" placeholder="Font size in pixels">
+                    <div class="help-text">Default font size for breadcrumbs (in pixels)</div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="marginTopEnabled">
+                        <label for="marginTopEnabled">Enable Top Margin Override</label>
+                    </div>
+                    <input type="number" id="marginTop" placeholder="Top margin in pixels">
+                    <div class="help-text">Space above the breadcrumbs (in pixels)</div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="marginBottomEnabled">
+                        <label for="marginBottomEnabled">Enable Bottom Margin Override</label>
+                    </div>
+                    <input type="number" id="marginBottom" placeholder="Bottom margin in pixels">
+                    <div class="help-text">Space below the breadcrumbs (in pixels)</div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="separatorEnabled">
+                        <label for="separatorEnabled">Enable Separator Override</label>
+                    </div>
+                    <input type="text" id="separator" placeholder="Separator character">
+                    <div class="help-text">Character used between breadcrumb items (e.g., >, /, |)</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Mobile Settings</h2>
+                
+                <div class="form-group">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="useSliderEnabled">
+                        <label for="useSliderEnabled">Enable Mobile Slider Override</label>
+                    </div>
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="useSlider">
+                        <label for="useSlider">Use horizontal slider on mobile</label>
+                    </div>
+                    <div class="help-text">Makes breadcrumbs horizontally scrollable on mobile devices</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Navigation Settings</h2>
+                
+                <div class="form-group">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="menuHandlesEnabled">
+                        <label for="menuHandlesEnabled">Enable Menu Handles Override</label>
+                    </div>
+                    <input type="text" id="menuHandles" placeholder="Comma-separated menu handles or *">
+                    <div class="help-text">Enter menu handles to use for breadcrumbs, comma-separated, or * for all menus</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Custom CSS</h2>
+                
+                <div class="form-group">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="desktopCSSEnabled">
+                        <label for="desktopCSSEnabled">Enable Desktop CSS Override</label>
+                    </div>
+                    <textarea id="desktopCSS" placeholder="CSS for desktop view"></textarea>
+                    <div class="help-text">Custom CSS applied only on desktop devices</div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="mobileCSSEnabled">
+                        <label for="mobileCSSEnabled">Enable Mobile CSS Override</label>
+                    </div>
+                    <textarea id="mobileCSS" placeholder="CSS for mobile view"></textarea>
+                    <div class="help-text">Custom CSS applied only on mobile devices</div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="allBreadcrumbsCSSEnabled">
+                        <label for="allBreadcrumbsCSSEnabled">Enable All Breadcrumbs CSS Override</label>
+                    </div>
+                    <textarea id="allBreadcrumbsCSS" placeholder="CSS for all breadcrumb items"></textarea>
+                    <div class="help-text">Custom CSS applied to all breadcrumb items</div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="lastBreadcrumbCSSEnabled">
+                        <label for="lastBreadcrumbCSSEnabled">Enable Last Breadcrumb CSS Override</label>
+                    </div>
+                    <textarea id="lastBreadcrumbCSS" placeholder="CSS for the last breadcrumb item"></textarea>
+                    <div class="help-text">Custom CSS applied only to the last breadcrumb item</div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="hoverCSSEnabled">
+                        <label for="hoverCSSEnabled">Enable Hover CSS Override</label>
+                    </div>
+                    <textarea id="hoverCSS" placeholder="CSS for breadcrumb items on hover"></textarea>
+                    <div class="help-text">Custom CSS applied to breadcrumb items when hovered</div>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <button id="saveButton">Save Settings</button>
+            </div>
+            
+            <div class="card" style="margin-top: 20px;">
+                <h2>Help & Documentation</h2>
+                <p>SmartBreadcrumbs helps you add navigation breadcrumbs to your store. For support, contact us at support@smartbreadcrumbs.com</p>
+                
+                <h3>Installation Instructions:</h3>
+                <ol>
+                    <li>Add the SmartBreadcrumbs app block to your theme where you want breadcrumbs to appear</li>
+                    <li>Configure the settings above to customize the appearance</li>
+                    <li>Save your settings and check your store</li>
+                </ol>
+            </div>
+        </div>
     </div>
 </body>
 </html> 
