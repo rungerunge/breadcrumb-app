@@ -1,39 +1,65 @@
-// SmartBreadcrumbs - Direct Implementation
-// Version 3.3.0 - JS-free approach
+/**
+ * Smart Breadcrumbs - Main Script
+ * Bundling all breadcrumb JavaScript functionality
+ * v1.0.0
+ */
 
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('Smart Breadcrumbs: Using direct implementation');
+// This file is the main entry point for the breadcrumbs JavaScript
+// It loads all required components in the correct order
+
+(function() {
+  // Determine asset URLs
+  const scripts = document.getElementsByTagName('script');
+  const currentScript = scripts[scripts.length - 1];
+  const scriptSrc = currentScript.src;
+  const basePath = scriptSrc.substring(0, scriptSrc.lastIndexOf('/') + 1);
   
-  // Log breadcrumb state for debugging
-  const breadcrumbElement = document.querySelector('[data-breadcrumb-component]');
-  if (breadcrumbElement) {
-    console.log('Breadcrumb element found:', breadcrumbElement);
-    
-    // Make breadcrumbs more visible for debugging
-    breadcrumbElement.style.border = '2px solid blue';
-    breadcrumbElement.style.padding = '10px';
-    breadcrumbElement.style.background = '#f0f8ff';
-    breadcrumbElement.style.display = 'block';
-    breadcrumbElement.style.margin = '10px 0';
-  } else {
-    console.error('Breadcrumb element not found in DOM. The snippet may not be included in the theme.');
-    
-    // Create a visual indicator that the breadcrumb element is missing
-    const header = document.querySelector('header');
-    if (header) {
-      const missingAlert = document.createElement('div');
-      missingAlert.innerHTML = `
-        <div style="background: #ffe0e0; color: #d00; padding: 10px; margin: 10px 0; border: 1px solid #d00; text-align: center;">
-          Breadcrumb component not found. Make sure to include the snippet in your theme.
-        </div>
-      `;
-      header.parentNode.insertBefore(missingAlert, header.nextSibling);
+  // Define script loading order
+  const requiredScripts = [
+    'breadcrumb-settings.js',
+    'menu-parser.js',
+    'breadcrumb-client.js'
+  ];
+  
+  // Load scripts in sequence
+  function loadScripts(index) {
+    if (index >= requiredScripts.length) {
+      console.log('[SmartBreadcrumbs] All scripts loaded');
+      return;
     }
+    
+    const scriptName = requiredScripts[index];
+    const scriptUrl = basePath + scriptName;
+    
+    // Skip if already loaded
+    if (
+      (scriptName === 'breadcrumb-settings.js' && window.smartBreadcrumbsSettings) ||
+      (scriptName === 'menu-parser.js' && window.smartBreadcrumbs) ||
+      (scriptName === 'breadcrumb-client.js' && window.smartBreadcrumbsClient)
+    ) {
+      loadScripts(index + 1);
+      return;
+    }
+    
+    // Load script
+    const script = document.createElement('script');
+    script.src = scriptUrl;
+    script.onload = function() {
+      loadScripts(index + 1);
+    };
+    script.onerror = function() {
+      console.error(`[SmartBreadcrumbs] Failed to load ${scriptName}`);
+      loadScripts(index + 1);
+    };
+    document.head.appendChild(script);
   }
-});
-
-// Diagnostic logging for page information
-console.log('Page path:', window.location.pathname);
-console.log('Page template:', document.documentElement.getAttribute('data-template'));
-
-// No class implementation - using pure HTML approach 
+  
+  // Start loading scripts
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      loadScripts(0);
+    });
+  } else {
+    loadScripts(0);
+  }
+})(); 

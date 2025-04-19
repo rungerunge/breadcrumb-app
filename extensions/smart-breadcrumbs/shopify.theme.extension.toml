@@ -1,6 +1,7 @@
 name = "Smart Breadcrumbs"
 version = "5.1.0"
 type = "theme"
+handle = "smart-breadcrumbs"
 
 # Theme extension settings
 [[extensions]]
@@ -84,43 +85,144 @@ includes = ["product"]
     label = "Hover State CSS"
     default = ""
 
-[[extensions]]
-name = "Smart Breadcrumbs"
-handle = "smart-breadcrumbs"
-type = "theme"
-
 [settings]
   [[settings.fields]]
-  key = "font_size"
-  type = "number"
-  name = "Font Size"
-  description = "Font size in pixels"
+  type = "checkbox"
+  id = "use_menu_based_breadcrumbs"
+  label = "Use menu-based breadcrumbs"
+  info = "Generate breadcrumbs based on menu structure (recommended for better SEO)"
+  default = true
+
+  [[settings.fields]]
+  type = "checkbox"
+  id = "show_breadcrumbs"
+  label = "Show breadcrumbs"
+  default = true
+
+  [[settings.fields]]
+  type = "checkbox"
+  id = "use_slider_for_mobile"
+  label = "Use slider for mobile"
+  info = "On mobile, breadcrumbs become a slider instead of wrapping"
+  default = false
+
+  [[settings.fields]]
+  type = "color"
+  id = "breadcrumb_background_color"
+  label = "Background color"
+  default = "rgba(240, 240, 240, 0.5)"
+
+  [[settings.fields]]
+  type = "select"
+  id = "breadcrumb_alignment"
+  label = "Alignment"
+  [[settings.fields.options]]
+  value = "left"
+  label = "Left"
+  [[settings.fields.options]]
+  value = "center"
+  label = "Center"
+  [[settings.fields.options]]
+  value = "right"
+  label = "Right"
+  default = "left"
+
+  [[settings.fields]]
+  type = "range"
+  id = "breadcrumb_font_size"
+  label = "Font size"
+  min = 10
+  max = 24
+  step = 1
+  unit = "px"
   default = 14
 
   [[settings.fields]]
-  key = "margin_top"
-  type = "number"
-  name = "Margin Top"
-  description = "Top margin in pixels"
-  default = 20
-
-  [[settings.fields]]
-  key = "margin_bottom"
-  type = "number"
-  name = "Margin Bottom"
-  description = "Bottom margin in pixels"
-  default = 20
-
-  [[settings.fields]]
-  key = "separator"
   type = "text"
-  name = "Breadcrumb Separator"
-  description = "Character or HTML to separate breadcrumb items"
-  default = "›"
+  id = "breadcrumb_font_family"
+  label = "Font family"
+  info = "Leave blank to use theme default"
 
   [[settings.fields]]
-  key = "mobile_slider"
-  type = "boolean"
-  name = "Enable Mobile Slider"
-  description = "Enable horizontal scrolling on mobile devices"
-  default = true 
+  type = "text"
+  id = "breadcrumb_home_text"
+  label = "Home link text"
+  default = "Home"
+
+  [[settings.fields]]
+  type = "color"
+  id = "breadcrumb_text_color"
+  label = "Text color"
+  default = "#555555"
+
+  [[settings.fields]]
+  type = "color"
+  id = "breadcrumb_hover_color"
+  label = "Hover color"
+  default = "#000000"
+
+  [[settings.fields]]
+  type = "color"
+  id = "breadcrumb_separator_color"
+  label = "Separator color"
+  default = "#999999"
+
+  [[settings.fields]]
+  type = "color"
+  id = "breadcrumb_current_color"
+  label = "Current item color"
+  default = "#333333"
+
+  [[settings.fields]]
+  type = "checkbox"
+  id = "breadcrumb_use_uppercase"
+  label = "Use uppercase text"
+  default = false
+
+# Extension assets
+[[files]]
+handle = "breadcrumbs.css"
+path = "assets/breadcrumbs.css"
+
+[[files]]
+handle = "breadcrumbs.js"
+path = "assets/breadcrumbs.js"
+
+[[files]]
+handle = "breadcrumb-settings.js"
+path = "assets/breadcrumb-settings.js"
+
+[[files]]
+handle = "menu-parser.js"
+path = "assets/menu-parser.js"
+
+[[files]]
+handle = "breadcrumb-client.js"
+path = "assets/breadcrumb-client.js"
+
+# Extension snippets
+[[files]]
+handle = "smart-breadcrumbs"
+path = "snippets/smart-breadcrumbs.liquid"
+
+[[files]]
+handle = "smart-breadcrumbs-product"
+path = "snippets/smart-breadcrumbs-product.liquid"
+
+[[files]]
+handle = "smart-breadcrumbs-collection"
+path = "snippets/smart-breadcrumbs-collection.liquid"
+
+[[files]]
+handle = "smart-breadcrumbs-page"
+path = "snippets/smart-breadcrumbs-page.liquid"
+
+# Extension blocks
+[[files]]
+handle = "breadcrumbs"
+path = "blocks/breadcrumbs.liquid"
+
+# Extension sections
+[[files]]
+handle = "settings"
+path = "sections/settings.liquid" 

@@ -1,0 +1,204 @@
+{% comment %}
+  Smart Breadcrumbs - Settings Section
+  Allows customization of breadcrumb appearance and behavior
+  v1.0.0
+{% endcomment %}
+
+{% schema %}
+{
+  "name": "Breadcrumb Settings",
+  "settings": [
+    {
+      "type": "header",
+      "content": "General Settings"
+    },
+    {
+      "type": "checkbox",
+      "id": "use_menu_based_breadcrumbs",
+      "label": "Use menu-based breadcrumbs",
+      "info": "Generate breadcrumbs based on menu structure (recommended for advanced features)",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_breadcrumbs",
+      "label": "Show breadcrumbs",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "use_slider_for_mobile",
+      "label": "Use slider for mobile",
+      "info": "On mobile, breadcrumbs become a slider instead of wrapping",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Appearance"
+    },
+    {
+      "type": "color",
+      "id": "breadcrumb_background_color",
+      "label": "Background color",
+      "default": "rgba(240, 240, 240, 0.5)"
+    },
+    {
+      "type": "select",
+      "id": "breadcrumb_alignment",
+      "label": "Alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "range",
+      "id": "breadcrumb_font_size",
+      "label": "Font size",
+      "min": 10,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "default": 14
+    },
+    {
+      "type": "text",
+      "id": "breadcrumb_font_family",
+      "label": "Font family",
+      "info": "Leave blank to use theme default"
+    },
+    {
+      "type": "text",
+      "id": "breadcrumb_home_text",
+      "label": "Home link text",
+      "default": "Home"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "breadcrumb_text_color",
+      "label": "Text color",
+      "default": "#555555"
+    },
+    {
+      "type": "color",
+      "id": "breadcrumb_hover_color",
+      "label": "Hover color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "breadcrumb_separator_color",
+      "label": "Separator color",
+      "default": "#999999"
+    },
+    {
+      "type": "color",
+      "id": "breadcrumb_current_color",
+      "label": "Current item color",
+      "default": "#333333"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "breadcrumb_margin_top",
+      "label": "Margin top",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 10
+    },
+    {
+      "type": "range",
+      "id": "breadcrumb_margin_right",
+      "label": "Margin right",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "breadcrumb_margin_bottom",
+      "label": "Margin bottom",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 10
+    },
+    {
+      "type": "range",
+      "id": "breadcrumb_margin_left",
+      "label": "Margin left",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "header",
+      "content": "Advanced Settings"
+    },
+    {
+      "type": "checkbox",
+      "id": "breadcrumb_use_uppercase",
+      "label": "Use uppercase text",
+      "default": false
+    },
+    {
+      "type": "textarea",
+      "id": "breadcrumb_custom_css",
+      "label": "Custom CSS",
+      "info": "Add custom CSS for breadcrumbs"
+    },
+    {
+      "type": "textarea",
+      "id": "breadcrumb_last_item_css",
+      "label": "Last item CSS",
+      "info": "Custom CSS for the current/last breadcrumb item",
+      "default": "font-weight: 500;"
+    },
+    {
+      "type": "textarea",
+      "id": "breadcrumb_hover_css",
+      "label": "Hover CSS",
+      "info": "Custom CSS for link hover state",
+      "default": "text-decoration: underline;"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Breadcrumb Settings",
+      "category": "Navigation"
+    }
+  ]
+}
+{% endschema %}
+
+<div style="display:none;">
+  {% comment %}
+    This section doesn't output any HTML, it's just for settings.
+    Settings are accessed by the smart-breadcrumbs snippet.
+  {% endcomment %}
+</div> 

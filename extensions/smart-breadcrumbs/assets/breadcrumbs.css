@@ -1,51 +1,182 @@
-.smart-breadcrumbs {
-  margin-top: var(--margin-top);
-  margin-bottom: var(--margin-bottom);
-  font-size: var(--font-size);
-}
+/**
+ * Smart Breadcrumbs - Default Styles
+ * These styles will be overridden by the dynamic CSS from settings
+ * v1.0.0
+ */
 
-.breadcrumb-nav {
-  width: 100%;
-  overflow: hidden;
-}
-
-.breadcrumb-list {
-  display: flex;
-  align-items: center;
-  list-style: none;
+.smart-breadcrumbs-block {
   margin: 0;
   padding: 0;
 }
 
-.breadcrumb-item {
+/* Default styles - these will be overridden by the dynamic CSS */
+.smart-breadcrumbs-container {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 14px;
+  line-height: 1.4;
+  margin: 10px 0;
+  padding: 8px 12px;
+  background-color: rgba(240, 240, 240, 0.5);
+  border-radius: 4px;
+}
+
+.smart-breadcrumbs-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.smart-breadcrumbs-item {
   display: inline-flex;
   align-items: center;
-  white-space: nowrap;
 }
 
-.breadcrumb-item a {
-  color: inherit;
+.smart-breadcrumbs-link {
+  color: #555;
   text-decoration: none;
+  transition: color 0.2s ease;
 }
 
-.breadcrumb-separator {
-  margin: 0 0.5em;
-  color: #666;
+.smart-breadcrumbs-link:hover {
+  color: #000;
+  text-decoration: underline;
 }
 
-.breadcrumb-item.current {
-  font-weight: 600;
+.smart-breadcrumbs-separator {
+  margin: 0 8px;
+  color: #999;
 }
 
-@media screen and (max-width: 768px) {
-  [data-mobile-slider="true"] .breadcrumb-nav {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+.smart-breadcrumbs-current {
+  font-weight: 500;
+  color: #333;
+}
+
+@media (max-width: 480px) {
+  .smart-breadcrumbs-container {
+    font-size: 12px;
+    padding: 6px 10px;
   }
+  
+  .smart-breadcrumbs-separator {
+    margin: 0 6px;
+  }
+}
 
-  [data-mobile-slider="true"] .breadcrumb-nav::-webkit-scrollbar {
-    display: none;
+/**
+ * Smart Breadcrumbs v5.0 - CSS Styles
+ * Clean, responsive styling for the breadcrumb navigation
+ */
+
+.breadcrumb__container {
+  margin: 15px 0;
+  padding: 10px 15px;
+  background: rgba(245, 245, 245, 0.8);
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.breadcrumb__list {
+  display: flex;
+  flex-wrap: wrap;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  align-items: center;
+}
+
+.breadcrumb__item {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.breadcrumb__separator {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 10px;
+  color: #888;
+  font-size: 12px;
+}
+
+.breadcrumb__link {
+  color: #0066cc;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.breadcrumb__link:hover {
+  color: #004080;
+  text-decoration: underline;
+}
+
+.breadcrumb__current {
+  color: #333;
+  font-weight: 500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767px) {
+  .breadcrumb__container {
+    padding: 8px 12px;
+    margin: 10px 0;
+    font-size: 12px;
+  }
+  
+  .breadcrumb__separator {
+    margin: 0 6px;
+  }
+}
+
+/* Theme compatibility */
+[data-theme="dark"] .breadcrumb__container,
+.theme-dark .breadcrumb__container,
+body.dark .breadcrumb__container {
+  background: rgba(48, 48, 48, 0.8);
+}
+
+[data-theme="dark"] .breadcrumb__link,
+.theme-dark .breadcrumb__link,
+body.dark .breadcrumb__link {
+  color: #66b0ff;
+}
+
+[data-theme="dark"] .breadcrumb__current,
+.theme-dark .breadcrumb__current,
+body.dark .breadcrumb__current {
+  color: #e0e0e0;
+}
+
+[data-theme="dark"] .breadcrumb__separator,
+.theme-dark .breadcrumb__separator,
+body.dark .breadcrumb__separator {
+  color: #999;
+}
+
+/* High-contrast mode support */
+@media (forced-colors: active) {
+  .breadcrumb__link {
+    color: LinkText;
+  }
+  
+  .breadcrumb__current {
+    color: CanvasText;
+  }
+  
+  .breadcrumb__separator {
+    color: GrayText;
   }
 } 

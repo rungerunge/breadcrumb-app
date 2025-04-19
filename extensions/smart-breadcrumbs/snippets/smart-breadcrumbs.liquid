@@ -4,16 +4,104 @@
   v5.1.0
 {% endcomment %}
 
-{% liquid
-  # Determine page type and include appropriate template
-  if template contains 'product'
-    render 'smart-breadcrumbs-product'
-  elsif template contains 'collection'
-    render 'smart-breadcrumbs-collection'
-  else
-    render 'smart-breadcrumbs-page'
-  endif
-%}
+{% if settings.use_menu_based_breadcrumbs %}
+  {% comment %} 
+    Using client-side menu-based breadcrumbs (recommended for advanced features) 
+  {% endcomment %}
+  <div data-smart-breadcrumbs class="smart-breadcrumbs-block">
+    {% comment %}
+      This container will be populated by the JavaScript client
+      with breadcrumbs based on the site's menu structure
+    {% endcomment %}
+  </div>
+
+  <script>
+    (function() {
+      // Collect settings from metafields or defaults
+      var settings = {
+        showBreadcrumbs: {{ settings.show_breadcrumbs | default: true | json }},
+        useSlider: {{ settings.use_slider_for_mobile | default: false | json }},
+        fontFamily: {{ settings.breadcrumb_font_family | json }},
+        fontSize: {{ settings.breadcrumb_font_size | default: 14 | json }},
+        textColor: {{ settings.breadcrumb_text_color | default: '#555555' | json }},
+        hoverColor: {{ settings.breadcrumb_hover_color | default: '#000000' | json }},
+        separatorColor: {{ settings.breadcrumb_separator_color | default: '#999999' | json }},
+        currentColor: {{ settings.breadcrumb_current_color | default: '#333333' | json }},
+        backgroundColor: {{ settings.breadcrumb_background_color | default: 'rgba(240, 240, 240, 0.5)' | json }},
+        homeText: {{ settings.breadcrumb_home_text | default: 'Home' | json }},
+        alignment: {{ settings.breadcrumb_alignment | default: 'left' | json }},
+        marginTop: {{ settings.breadcrumb_margin_top | default: 10 | json }},
+        marginRight: {{ settings.breadcrumb_margin_right | default: 0 | json }},
+        marginBottom: {{ settings.breadcrumb_margin_bottom | default: 10 | json }},
+        marginLeft: {{ settings.breadcrumb_margin_left | default: 0 | json }},
+        useUppercase: {{ settings.breadcrumb_use_uppercase | default: false | json }},
+        customCSS: {{ settings.breadcrumb_custom_css | default: '' | json }},
+        lastItemCSS: {{ settings.breadcrumb_last_item_css | default: 'font-weight: 500;' | json }},
+        hoverCSS: {{ settings.breadcrumb_hover_css | default: 'text-decoration: underline;' | json }}
+      };
+      
+      // Set meta tag with settings
+      var settingsTag = document.querySelector('meta[name="breadcrumb-settings"]');
+      if (!settingsTag) {
+        settingsTag = document.createElement('meta');
+        settingsTag.name = 'breadcrumb-settings';
+        document.head.appendChild(settingsTag);
+      }
+      settingsTag.content = encodeURIComponent(JSON.stringify(settings));
+      
+      // Load required scripts if not already loaded
+      function loadScript(src, callback) {
+        var script = document.createElement('script');
+        script.src = src;
+        script.onload = callback;
+        document.head.appendChild(script);
+      }
+      
+      function loadScripts() {
+        if (!window.smartBreadcrumbsSettings) {
+          loadScript("{{ 'breadcrumb-settings.js' | asset_url }}", function() {
+            if (!window.smartBreadcrumbs) {
+              loadScript("{{ 'menu-parser.js' | asset_url }}", function() {
+                loadScript("{{ 'breadcrumb-client.js' | asset_url }}", function() {});
+              });
+            } else {
+              loadScript("{{ 'breadcrumb-client.js' | asset_url }}", function() {});
+            }
+          });
+        } else if (!window.smartBreadcrumbs) {
+          loadScript("{{ 'menu-parser.js' | asset_url }}", function() {
+            if (!window.smartBreadcrumbsClient) {
+              loadScript("{{ 'breadcrumb-client.js' | asset_url }}", function() {});
+            }
+          });
+        } else if (!window.smartBreadcrumbsClient) {
+          loadScript("{{ 'breadcrumb-client.js' | asset_url }}", function() {});
+        }
+      }
+      
+      // Load scripts
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadScripts);
+      } else {
+        loadScripts();
+      }
+    })();
+  </script>
+{% else %}
+  {% comment %} 
+    Using server-side template-based breadcrumbs (legacy approach) 
+  {% endcomment %}
+  {% liquid
+    # Determine page type and include appropriate template
+    if template contains 'product'
+      render 'smart-breadcrumbs-product'
+    elsif template contains 'collection'
+      render 'smart-breadcrumbs-collection'
+    else
+      render 'smart-breadcrumbs-page'
+    endif
+  %}
+{% endif %}
 
 {% comment %} Advanced debug information - only visible when ?debug=true is in URL {% endcomment %}
 {% if request.design_mode or request.query_string contains 'debug=true' %}
@@ -30,5 +118,6 @@
       <li>404 Page: {{ is_404_page }}</li>
     </ul>
     <p style="margin: 5px 0 0 0;">Path: {{ request.path }}</p>
+    <p style="margin: 5px 0 0 0;">Method: {{ settings.use_menu_based_breadcrumbs | default: false | json }}</p>
   </div>
 {% endif %} 
