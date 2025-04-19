@@ -1,144 +1,34 @@
 {% comment %}
-  Smart Breadcrumbs v5.2
-  A robust breadcrumb navigation component with navigation-based collection detection
-  
-  Usage:
-  {% render 'smart-breadcrumbs' %}
+  Smart Breadcrumbs - Main Template
+  Dynamically includes the appropriate breadcrumb template based on page type
+  v5.1.0
 {% endcomment %}
 
-{%- liquid
-  # Set debug mode to true to see diagnostic information
-  assign debug_mode = false
-  
-  # Include navigation data for enhanced collection detection
-  render 'smart-breadcrumbs-navigation'
-
-  # Determine page type
-  assign page_type = request.page_type
-
-  # Disable breadcrumbs on certain pages
-  assign show_breadcrumbs = true
-  if template == 'index' or template == '404'
-    assign show_breadcrumbs = false
+{% liquid
+  # Determine page type and include appropriate template
+  if template contains 'product'
+    render 'smart-breadcrumbs-product'
+  elsif template contains 'collection'
+    render 'smart-breadcrumbs-collection'
+  else
+    render 'smart-breadcrumbs-page'
   endif
--%}
+%}
 
-{%- if show_breadcrumbs -%}
-  {%- if template contains 'product' -%}
-    {% render 'smart-breadcrumbs-product' %}
-  {%- elsif template contains 'collection' -%}
-    {% render 'smart-breadcrumbs-collection' %}
-  {%- else -%}
-    {% render 'smart-breadcrumbs-page' %}
-  {%- endif -%}
-{%- endif -%}
-
-{% if debug_mode %}
-<style>
-  .breadcrumb-debug {
-    margin-top: 10px;
-    padding: 10px;
-    background: #f8f9fa;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 12px;
-  }
-  .breadcrumb-debug h3 {
-    margin-top: 0;
-    margin-bottom: 8px;
-    font-size: 14px;
-  }
-  .breadcrumb-debug-row {
-    padding: 3px 0;
-    display: flex;
-  }
-  .breadcrumb-debug-label {
-    font-weight: bold;
-    margin-right: 10px;
-    min-width: 120px;
-  }
-  .breadcrumb-debug-value {
-    font-family: monospace;
-    color: #0366d6;
-  }
-</style>
-
-<div class="breadcrumb-debug">
-  <h3>Breadcrumb Diagnostics</h3>
-  <div class="breadcrumb-debug-row">
-    <span class="breadcrumb-debug-label">Template:</span>
-    <span class="breadcrumb-debug-value">{{ template }}</span>
+{% comment %} Advanced debug information - only visible when ?debug=true is in URL {% endcomment %}
+{% if request.design_mode or request.query_string contains 'debug=true' %}
+  <div style="font-size: 12px; color: #777; background: #f7f7f7; padding: 10px; margin-top: 10px; border-radius: 4px;">
+    <p style="margin: 0 0 5px 0;"><strong>Router Debug Info:</strong></p>
+    <p style="margin: 0 0 5px 0;">Template: {{ template }}</p>
+    <p style="margin: 0 0 5px 0;">Current Template: {{ current_template }}</p>
+    <p style="margin: 0 0 5px 0;">Page Type Detection:</p>
+    <ul style="margin: 0; padding-left: 20px;">
+      <li>Product Page: {{ is_product_page }}</li>
+      <li>Collection Page: {{ is_collection_page }}</li>
+      <li>Search Page: {{ is_search_page }}</li>
+      <li>Cart Page: {{ is_cart_page }}</li>
+      <li>404 Page: {{ is_404_page }}</li>
+    </ul>
+    <p style="margin: 5px 0 0 0;">Path: {{ request.path }}</p>
   </div>
-  <div class="breadcrumb-debug-row">
-    <span class="breadcrumb-debug-label">Page Type:</span>
-    <span class="breadcrumb-debug-value">{{ page_type }}</span>
-  </div>
-  <div class="breadcrumb-debug-row">
-    <span class="breadcrumb-debug-label">Path:</span>
-    <span class="breadcrumb-debug-value">{{ request.path }}</span>
-  </div>
-  <div class="breadcrumb-debug-row">
-    <span class="breadcrumb-debug-label">Collection:</span>
-    <span class="breadcrumb-debug-value">
-      {% if collection %}
-        {{ collection.title }} ({{ collection.handle }})
-      {% else %}
-        null
-      {% endif %}
-    </span>
-  </div>
-  <div class="breadcrumb-debug-row">
-    <span class="breadcrumb-debug-label">Product:</span>
-    <span class="breadcrumb-debug-value">
-      {% if product %}
-        {{ product.title }} ({{ product.handle }})
-      {% else %}
-        null
-      {% endif %}
-    </span>
-  </div>
-  {% if product %}
-  <div class="breadcrumb-debug-row">
-    <span class="breadcrumb-debug-label">Product Collections:</span>
-    <span class="breadcrumb-debug-value">
-      {% if product.collections.size > 0 %}
-        {% for collection in product.collections %}
-          {{ collection.title }}{% unless forloop.last %}, {% endunless %}
-        {% endfor %}
-      {% else %}
-        No collections
-      {% endif %}
-    </span>
-  </div>
-  <div class="breadcrumb-debug-row">
-    <span class="breadcrumb-debug-label">Navigation:</span>
-    <span class="breadcrumb-debug-value">
-      {% assign main_menu_handle = settings.main_menu_handle | default: 'main-menu' %}
-      {% if linklists[main_menu_handle] %}
-        {{ main_menu_handle }} ({{ linklists[main_menu_handle].links.size }} items)
-      {% else %}
-        Main menu not found
-      {% endif %}
-    </span>
-  </div>
-  {% endif %}
-</div>
-
-<script>
-  console.log('=== BREADCRUMB DEBUG INFO ===');
-  console.log('Template:', {{ template | json }});
-  console.log('URL:', {{ request.path | json }});
-  console.log('Collection:', {% if collection %}{{ collection.title | json }}{% else %}null{% endif %});
-  console.log('Product:', {% if product %}{{ product.title | json }}{% else %}null{% endif %});
-  {% if product %}
-  console.log('Product Collections:', 
-    {% if product.collections.size > 0 %}
-      {{ product.collections | map: 'title' | json }}
-    {% else %}
-      []
-    {% endif %}
-  );
-  {% endif %}
-</script>
 {% endif %} 
