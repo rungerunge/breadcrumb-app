@@ -57,20 +57,22 @@ app.get('/health', (req, res) => {
 // Initialize Shopify app middleware
 const shopify = shopifyApp(shopifyAppConfig);
 
-// Use Shopify middleware
-app.use('/*', shopify.validateAuthenticatedSession());
+// Set up webhooks and auth routes first (these should be public)
+app.get(shopifyAppConfig.auth.path, shopify.auth.begin());
+app.get(
+  shopifyAppConfig.auth.callbackPath,
+  shopify.auth.callback(),
+  shopify.redirectToShopifyOrAppRoot()
+);
+app.post(
+  shopifyAppConfig.webhooks.path,
+  shopify.processWebhooks({ webhookHandlers: {} })
+);
+
+// All other routes should be authenticated
+app.use('/api/*', shopify.validateAuthenticatedSession());
 
 // API Routes that require authentication
-app.use('/api/*', async (req, res, next) => {
-  const session = res.locals.shopify?.session;
-  if (!session) {
-    res.status(401).json({ error: 'Unauthorized' });
-    return;
-  }
-  next();
-});
-
-// Settings endpoints
 app.get('/api/settings', async (req, res) => {
   try {
     const { shop } = res.locals.shopify.session;
