@@ -1,56 +1,74 @@
 name = "Smart Breadcrumbs"
-version = "2.0.0"
+version = "2.1.0"
 type = "theme"
 
 [settings]
   [[settings.input]]
-    key = "breadcrumb_font_size"
+    key = "fontSize"
     type = "number"
     label = "Font Size (px)"
     default = 14
     
   [[settings.input]]
-    key = "breadcrumb_mobile_font_size"
+    key = "marginTop"
     type = "number"
-    label = "Mobile Font Size (px)"
-    default = 12
+    label = "Margin Top (px)"
+    default = 20
     
   [[settings.input]]
-    key = "breadcrumb_color"
-    type = "color"
-    label = "Text Color"
-    default = "#666666"
+    key = "marginBottom"
+    type = "number"
+    label = "Margin Bottom (px)"
+    default = 20
     
   [[settings.input]]
-    key = "breadcrumb_hover_color"
-    type = "color"
-    label = "Hover Color"
-    default = "#000000"
+    key = "separator"
+    type = "text"
+    label = "Breadcrumb Separator"
+    default = "›"
     
   [[settings.input]]
-    key = "breadcrumb_separator_color"
-    type = "color"
-    label = "Separator Color"
-    default = "#999999"
-    
-  [[settings.input]]
-    key = "breadcrumb_current_color"
-    type = "color"
-    label = "Current Page Color"
-    default = "#333333"
-    
-  [[settings.input]]
-    key = "enable_mobile_slider"
+    key = "mobileSlider"
     type = "boolean"
     label = "Enable Mobile Slider"
     default = true
     
   [[settings.input]]
-    key = "menu_handles"
+    key = "menuHandles"
     type = "text"
     label = "Menu Handles"
     default = "main-menu"
     info = "Comma-separated menu handles. Use * as wildcard."
+    
+  [[settings.input]]
+    key = "customCssDesktop"
+    type = "textarea"
+    label = "Desktop/Tablet CSS"
+    default = ""
+    
+  [[settings.input]]
+    key = "customCssMobile"
+    type = "textarea"
+    label = "Mobile CSS"
+    default = ""
+    
+  [[settings.input]]
+    key = "customCssAll"
+    type = "textarea"
+    label = "All Breadcrumbs CSS"
+    default = ""
+    
+  [[settings.input]]
+    key = "customCssLast"
+    type = "textarea"
+    label = "Last Breadcrumb CSS"
+    default = ""
+    
+  [[settings.input]]
+    key = "customCssHover"
+    type = "textarea"
+    label = "Hover State CSS"
+    default = ""
 
 [[extensions]]
 name = "Smart Breadcrumbs"
