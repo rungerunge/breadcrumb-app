@@ -5,12 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartBreadcrumbs</title>
     <link rel="stylesheet" href="/styles.css">
+    <script>
+        // Check if we're in a Shopify iframe
+        const isShopifyIframe = window.top !== window.self;
+        
+        window.addEventListener('load', function() {
+            // If we're not in the auth process (no auth query params)
+            if (!window.location.search.includes('hmac=') && !window.location.search.includes('shop=')) {
+                // Get the shop parameter from the URL if it exists
+                const urlParams = new URLSearchParams(window.location.search);
+                const shop = urlParams.get('shop');
+                
+                // If we have a shop parameter, redirect to auth
+                if (shop) {
+                    window.location.href = `/api/auth?shop=${shop}`;
+                }
+            }
+        });
+    </script>
 </head>
 <body>
     <div id="app">
         <div class="app-container">
             <h1>SmartBreadcrumbs</h1>
-            <p>Welcome to your Shopify app. Please wait while we redirect you to the authentication page...</p>
+            <div class="loading-spinner"></div>
+            <p>Initializing app...</p>
         </div>
     </div>
 </body>
