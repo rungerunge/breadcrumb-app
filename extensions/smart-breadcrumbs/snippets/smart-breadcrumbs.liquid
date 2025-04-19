@@ -1,38 +1,62 @@
 {% comment %}
-    Smart Breadcrumbs - Ultra Simple Version
-    Version: 2.1.8
-    No external dependencies, no storage, no JavaScript
+    Minimal Breadcrumbs Component
+    Version: 3.0.0
+    Follows Shopify best practices with no external dependencies
 {% endcomment %}
 
-<div style="margin: 1em 0; padding: 0.5em 1em; background: #f8f8f8; border-radius: 4px; font-size: 14px;">
-  <span style="color: #666;">
-    <a href="/" style="color: #666; text-decoration: none;">Home</a>
-  </span>
+<nav aria-label="Breadcrumbs" style="font-size: 14px; margin: 1em 0;">
+  <ol style="display: flex; list-style: none; padding: 0; margin: 0; flex-wrap: wrap;">
+    <li style="display: inline-flex; align-items: center;">
+      <a href="/" style="color: #666; text-decoration: none;">Home</a>
+    </li>
 
-  {% if template contains 'product' %}
-    <span style="color: #999; margin: 0 0.5em;">/</span>
-    {% if collection %}
-      <span>
-        <a href="{{ collection.url }}" style="color: #666; text-decoration: none;">{{ collection.title }}</a>
-      </span>
+    {% if template contains 'product' %}
+      <li style="display: inline-flex; align-items: center; margin: 0 0.3em;">
+        <span style="color: #999;" aria-hidden="true">/</span>
+      </li>
+      {% if collection %}
+        <li style="display: inline-flex; align-items: center;">
+          <a href="{{ collection.url }}" style="color: #666; text-decoration: none;">{{ collection.title }}</a>
+        </li>
+        <li style="display: inline-flex; align-items: center; margin: 0 0.3em;">
+          <span style="color: #999;" aria-hidden="true">/</span>
+        </li>
+      {% endif %}
+      <li style="display: inline-flex; align-items: center;">
+        <span style="color: #333; font-weight: 500;" aria-current="page">{{ product.title }}</span>
+      </li>
+
+    {% elsif template contains 'collection' %}
+      <li style="display: inline-flex; align-items: center; margin: 0 0.3em;">
+        <span style="color: #999;" aria-hidden="true">/</span>
+      </li>
+      <li style="display: inline-flex; align-items: center;">
+        <span style="color: #333; font-weight: 500;" aria-current="page">{{ collection.title }}</span>
+      </li>
+
+    {% elsif template contains 'page' %}
+      <li style="display: inline-flex; align-items: center; margin: 0 0.3em;">
+        <span style="color: #999;" aria-hidden="true">/</span>
+      </li>
+      <li style="display: inline-flex; align-items: center;">
+        <span style="color: #333; font-weight: 500;" aria-current="page">{{ page.title }}</span>
+      </li>
+
+    {% elsif template contains 'cart' %}
+      <li style="display: inline-flex; align-items: center; margin: 0 0.3em;">
+        <span style="color: #999;" aria-hidden="true">/</span>
+      </li>
+      <li style="display: inline-flex; align-items: center;">
+        <span style="color: #333; font-weight: 500;" aria-current="page">Shopping Cart</span>
+      </li>
+
+    {% elsif template != 'index' %}
+      <li style="display: inline-flex; align-items: center; margin: 0 0.3em;">
+        <span style="color: #999;" aria-hidden="true">/</span>
+      </li>
+      <li style="display: inline-flex; align-items: center;">
+        <span style="color: #333; font-weight: 500;" aria-current="page">{{ page_title }}</span>
+      </li>
     {% endif %}
-    <span style="color: #999; margin: 0 0.5em;">/</span>
-    <span style="color: #333; font-weight: 500;">{{ product.title }}</span>
-
-  {% elsif template contains 'collection' %}
-    <span style="color: #999; margin: 0 0.5em;">/</span>
-    <span style="color: #333; font-weight: 500;">{{ collection.title }}</span>
-
-  {% elsif template contains 'page' %}
-    <span style="color: #999; margin: 0 0.5em;">/</span>
-    <span style="color: #333; font-weight: 500;">{{ page.title }}</span>
-
-  {% elsif template contains 'cart' %}
-    <span style="color: #999; margin: 0 0.5em;">/</span>
-    <span style="color: #333; font-weight: 500;">Shopping Cart</span>
-
-  {% else %}
-    <span style="color: #999; margin: 0 0.5em;">/</span>
-    <span style="color: #333; font-weight: 500;">{{ page_title }}</span>
-  {% endif %}
-</div> 
+  </ol>
+</nav> 
