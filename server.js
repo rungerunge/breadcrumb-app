@@ -58,7 +58,7 @@ app.get('/health', (req, res) => {
 const shopify = shopifyApp(shopifyAppConfig);
 
 // Use Shopify middleware
-app.use('/*', shopify.authenticateToken());
+app.use('/*', shopify.validateAuthenticatedSession());
 
 // API Routes that require authentication
 app.use('/api/*', async (req, res, next) => {
