@@ -1,0 +1,44 @@
+{%- comment -%}
+  Smart Breadcrumbs Navigation Data v1.0
+  Exposes navigation data for enhanced collection detection
+{%- endcomment -%}
+
+{%- liquid
+  # Find main menu handle from theme settings or use default main-menu
+  assign main_menu_handle = settings.main_menu_handle | default: 'main-menu'
+  
+  # Try alternate common handles if the main one doesn't exist
+  unless linklists[main_menu_handle]
+    assign alternate_handles = 'main-menu,main_menu,header-menu,header_menu,navigation,primary-menu,primary_menu'
+    assign handle_array = alternate_handles | split: ','
+    
+    for handle in handle_array
+      if linklists[handle]
+        assign main_menu_handle = handle
+        break
+      endif
+    endfor
+  endunless
+-%}
+
+<script id="navigation-json" type="application/json">
+  {{ linklists[main_menu_handle] | json }}
+</script>
+
+{%- if product -%}
+<script id="product-json" type="application/json">
+  {
+    "handle": {{ product.handle | json }},
+    "title": {{ product.title | json }},
+    "collections": [
+      {%- for collection in product.collections -%}
+        {
+          "handle": {{ collection.handle | json }},
+          "title": {{ collection.title | json }},
+          "url": {{ collection.url | json }}
+        }{%- unless forloop.last -%},{%- endunless -%}
+      {%- endfor -%}
+    ]
+  }
+</script>
+{%- endif -%} 

@@ -1,6 +1,6 @@
 {% comment %}
-    Smart Breadcrumbs - Product Page v5.1
-    Enhanced collection detection with multiple fallback methods
+    Smart Breadcrumbs - Product Page v5.2
+    Enhanced collection detection with multi-method fallbacks
 {% endcomment %}
 
 {%- style -%}
@@ -56,23 +56,47 @@
 {%- endstyle -%}
 
 {%- liquid
-  # Determine which collection to use with multiple fallback methods
-  assign current_collection = null
+  # ENHANCED COLLECTION DETECTION LOGIC
   
-  # Method 1: Use the collection object from the page context
-  if collection and collection.title != blank
-    assign current_collection = collection
+  # Method 1: Use collection from URL context
+  assign current_collection = collection
   
-  # Method 2: Use the first collection from product.collections
-  elsif product.collections.first
+  # Method 2: Look for collection in URL
+  if current_collection == blank and request.path contains '/collections/'
+    assign path_parts = request.path | split: '/'
+    assign collection_index = -1
+    
+    # Find collection index in URL path
+    for part in path_parts
+      if part == 'collections' and collection_index == -1
+        assign collection_index = forloop.index
+      endif
+    endfor
+    
+    # If collection index was found and there's a handle after it
+    if collection_index > -1 and path_parts.size > collection_index
+      assign collection_handle = path_parts[collection_index]
+      
+      # Try to get collection from handle
+      for coll in product.collections
+        if coll.handle == collection_handle
+          assign current_collection = coll
+          break
+        endif
+      endfor
+    endif
+  endif
+  
+  # Method 3: Find primary collection (first collection)
+  if current_collection == blank and product.collections.first
     assign current_collection = product.collections.first
+  endif
   
-  # Method 3: Try to get collection from URL/handle
-  elsif request.path contains '/collections/'
-    assign url_parts = request.path | split: '/'
-    for part in url_parts
-      if forloop.index > 1 and url_parts[forloop.index0 | minus: 1] == 'collections'
-        assign collection_handle = part
+  # Method 4: Look for 'primary' or 'main' tagged collection
+  if current_collection == blank
+    for coll in product.collections
+      if coll.tags contains 'primary' or coll.tags contains 'main'
+        assign current_collection = coll
         break
       endif
     endfor
@@ -99,18 +123,11 @@
     {% endif %}
 </nav>
 
+{%- unless product or debug != blank -%}
 <!-- Add hidden debug info -->
 <div style="display: none;" data-breadcrumb-debug>
-  {% if product %}
-    <div>Product: {{ product.title | json }}</div>
-    <div>Collections count: {{ product.collections.size }}</div>
-    {% if product.collections.size > 0 %}
-      <div>First collection: {{ product.collections.first.title | json }}</div>
-    {% endif %}
-    <div>URL: {{ request.path | json }}</div>
-    <div>Collection variable: {{ collection.title | json }}</div>
-    <div>Current collection: {{ current_collection.title | json }}</div>
-  {% else %}
-    <div>Product object not available</div>
-  {% endif %}
+  <div>Product object not available on this page</div>
+  <div>Template: {{ template }}</div>
+  <div>URL: {{ request.path }}</div>
 </div>
+{%- endunless -%}
