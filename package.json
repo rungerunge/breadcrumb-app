@@ -7,11 +7,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon server.js",
-    "build": "echo 'No build step required'",
-    "deploy": "echo 'Deploy from GitHub'",
-    "config:push": "echo 'Config pushed'",
-    "config:pull": "echo 'Config pulled'",
-    "generate": "echo 'Generate completed'",
+    "build": "echo 'Build step completed'",
     "start": "node server.js",
     "prepare": "echo 'Prepare step completed'"
   },

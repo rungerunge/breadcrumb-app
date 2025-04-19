@@ -3,7 +3,7 @@ services:
     name: smart-breadcrumbs
     env: node
     plan: free
-    buildCommand: npm install --production
+    buildCommand: npm install --omit=dev --no-package-lock
     startCommand: node server.js
     envVars:
       - key: NODE_ENV
