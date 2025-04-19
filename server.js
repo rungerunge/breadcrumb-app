@@ -10,7 +10,6 @@ import { ApiVersion, shopifyApi } from '@shopify/shopify-api';
 import { shopifyApp } from '@shopify/shopify-app-express';
 import { SQLiteSessionStorage } from '@shopify/shopify-app-session-storage-sqlite';
 import { restResources } from '@shopify/shopify-api/rest/admin/2022-10';
-import nodeAdapter from '@shopify/shopify-api/adapters/node';
 import { open } from 'sqlite';
 import sqlite3 from 'sqlite3';
 
@@ -88,7 +87,6 @@ const shopify = shopifyApi({
   customShopDomains: isDev ? [] : undefined,
   billing: undefined,
   userAgentPrefix: 'smart-breadcrumbs',
-  ...nodeAdapter,
 });
 
 // Create the Shopify app configuration
