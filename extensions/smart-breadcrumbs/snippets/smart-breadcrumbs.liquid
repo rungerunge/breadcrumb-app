@@ -1,123 +1,302 @@
 {% comment %}
-  Smart Breadcrumbs - Main Template
-  Dynamically includes the appropriate breadcrumb template based on page type
-  v5.1.0
+  Smart Breadcrumbs
+  Simple breadcrumb navigation for Shopify
+  v1.0.0
 {% endcomment %}
 
-{% if settings.use_menu_based_breadcrumbs %}
-  {% comment %} 
-    Using client-side menu-based breadcrumbs (recommended for advanced features) 
-  {% endcomment %}
-  <div data-smart-breadcrumbs class="smart-breadcrumbs-block">
-    {% comment %}
-      This container will be populated by the JavaScript client
-      with breadcrumbs based on the site's menu structure
-    {% endcomment %}
-  </div>
+{% assign home_text = settings.home_text | default: 'Home' %}
+{% assign separator = settings.separator | default: '/' %}
+{% assign text_color = settings.text_color | default: '#555555' %}
+{% assign current_color = settings.current_color | default: '#333333' %}
+{% assign background_color = settings.background_color | default: 'rgba(240, 240, 240, 0.5)' %}
 
-  <script>
-    (function() {
-      // Collect settings from metafields or defaults
-      var settings = {
-        showBreadcrumbs: {{ settings.show_breadcrumbs | default: true | json }},
-        useSlider: {{ settings.use_slider_for_mobile | default: false | json }},
-        fontFamily: {{ settings.breadcrumb_font_family | json }},
-        fontSize: {{ settings.breadcrumb_font_size | default: 14 | json }},
-        textColor: {{ settings.breadcrumb_text_color | default: '#555555' | json }},
-        hoverColor: {{ settings.breadcrumb_hover_color | default: '#000000' | json }},
-        separatorColor: {{ settings.breadcrumb_separator_color | default: '#999999' | json }},
-        currentColor: {{ settings.breadcrumb_current_color | default: '#333333' | json }},
-        backgroundColor: {{ settings.breadcrumb_background_color | default: 'rgba(240, 240, 240, 0.5)' | json }},
-        homeText: {{ settings.breadcrumb_home_text | default: 'Home' | json }},
-        alignment: {{ settings.breadcrumb_alignment | default: 'left' | json }},
-        marginTop: {{ settings.breadcrumb_margin_top | default: 10 | json }},
-        marginRight: {{ settings.breadcrumb_margin_right | default: 0 | json }},
-        marginBottom: {{ settings.breadcrumb_margin_bottom | default: 10 | json }},
-        marginLeft: {{ settings.breadcrumb_margin_left | default: 0 | json }},
-        useUppercase: {{ settings.breadcrumb_use_uppercase | default: false | json }},
-        customCSS: {{ settings.breadcrumb_custom_css | default: '' | json }},
-        lastItemCSS: {{ settings.breadcrumb_last_item_css | default: 'font-weight: 500;' | json }},
-        hoverCSS: {{ settings.breadcrumb_hover_css | default: 'text-decoration: underline;' | json }}
-      };
-      
-      // Set meta tag with settings
-      var settingsTag = document.querySelector('meta[name="breadcrumb-settings"]');
-      if (!settingsTag) {
-        settingsTag = document.createElement('meta');
-        settingsTag.name = 'breadcrumb-settings';
-        document.head.appendChild(settingsTag);
-      }
-      settingsTag.content = encodeURIComponent(JSON.stringify(settings));
-      
-      // Load required scripts if not already loaded
-      function loadScript(src, callback) {
-        var script = document.createElement('script');
-        script.src = src;
-        script.onload = callback;
-        document.head.appendChild(script);
-      }
-      
-      function loadScripts() {
-        if (!window.smartBreadcrumbsSettings) {
-          loadScript("{{ 'breadcrumb-settings.js' | asset_url }}", function() {
-            if (!window.smartBreadcrumbs) {
-              loadScript("{{ 'menu-parser.js' | asset_url }}", function() {
-                loadScript("{{ 'breadcrumb-client.js' | asset_url }}", function() {});
-              });
-            } else {
-              loadScript("{{ 'breadcrumb-client.js' | asset_url }}", function() {});
-            }
-          });
-        } else if (!window.smartBreadcrumbs) {
-          loadScript("{{ 'menu-parser.js' | asset_url }}", function() {
-            if (!window.smartBreadcrumbsClient) {
-              loadScript("{{ 'breadcrumb-client.js' | asset_url }}", function() {});
-            }
-          });
-        } else if (!window.smartBreadcrumbsClient) {
-          loadScript("{{ 'breadcrumb-client.js' | asset_url }}", function() {});
-        }
-      }
-      
-      // Load scripts
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', loadScripts);
-      } else {
-        loadScripts();
-      }
-    })();
-  </script>
-{% else %}
-  {% comment %} 
-    Using server-side template-based breadcrumbs (legacy approach) 
-  {% endcomment %}
-  {% liquid
-    # Determine page type and include appropriate template
-    if template contains 'product'
-      render 'smart-breadcrumbs-product'
-    elsif template contains 'collection'
-      render 'smart-breadcrumbs-collection'
-    else
-      render 'smart-breadcrumbs-page'
-    endif
-  %}
-{% endif %}
+<style>
+  .smart-breadcrumbs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    font-size: 14px;
+    line-height: 1.4;
+    margin: 12px 0;
+    padding: 8px 12px;
+    border-radius: 4px;
+    background-color: {{ background_color }};
+  }
+  
+  .smart-breadcrumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .smart-breadcrumbs li {
+    display: inline-flex;
+    align-items: center;
+  }
+  
+  .smart-breadcrumbs a {
+    color: {{ text_color }};
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  
+  .smart-breadcrumbs a:hover {
+    color: #000;
+    text-decoration: underline;
+  }
+  
+  .smart-breadcrumbs .separator {
+    margin: 0 8px;
+    color: {{ text_color }};
+    opacity: 0.6;
+  }
+  
+  .smart-breadcrumbs .current {
+    font-weight: 500;
+    color: {{ current_color }};
+  }
+  
+  @media (max-width: 480px) {
+    .smart-breadcrumbs {
+      font-size: 12px;
+      padding: 6px 10px;
+    }
+    
+    .smart-breadcrumbs .separator {
+      margin: 0 6px;
+    }
+  }
+</style>
 
-{% comment %} Advanced debug information - only visible when ?debug=true is in URL {% endcomment %}
-{% if request.design_mode or request.query_string contains 'debug=true' %}
-  <div style="font-size: 12px; color: #777; background: #f7f7f7; padding: 10px; margin-top: 10px; border-radius: 4px;">
-    <p style="margin: 0 0 5px 0;"><strong>Router Debug Info:</strong></p>
-    <p style="margin: 0 0 5px 0;">Template: {{ template }}</p>
-    <p style="margin: 0 0 5px 0;">Current Template: {{ current_template }}</p>
-    <p style="margin: 0 0 5px 0;">Page Type Detection:</p>
-    <ul style="margin: 0; padding-left: 20px;">
-      <li>Product Page: {{ is_product_page }}</li>
-      <li>Collection Page: {{ is_collection_page }}</li>
-      <li>Search Page: {{ is_search_page }}</li>
-      <li>Cart Page: {{ is_cart_page }}</li>
-      <li>404 Page: {{ is_404_page }}</li>
-    </ul>
-    <p style="margin: 5px 0 0 0;">Path: {{ request.path }}</p>
-    <p style="margin: 5px 0 0 0;">Method: {{ settings.use_menu_based_breadcrumbs | default: false | json }}</p>
+<nav class="smart-breadcrumbs" aria-label="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    <!-- Home -->
+    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+      <a href="/" itemprop="item">
+        <span itemprop="name">{{ home_text }}</span>
+      </a>
+      <meta itemprop="position" content="1" />
+    </li>
+    
+    <li class="separator" aria-hidden="true">{{ separator }}</li>
+    
+    {% if template contains 'product' %}
+      {% if collection and collection.handle != 'all' %}
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="{{ collection.url }}" itemprop="item">
+            <span itemprop="name">{{ collection.title }}</span>
+          </a>
+          <meta itemprop="position" content="2" />
+        </li>
+        <li class="separator" aria-hidden="true">{{ separator }}</li>
+      {% elsif product.collections.size > 0 %}
+        {% assign collection = product.collections.first %}
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="{{ collection.url }}" itemprop="item">
+            <span itemprop="name">{{ collection.title }}</span>
+          </a>
+          <meta itemprop="position" content="2" />
+        </li>
+        <li class="separator" aria-hidden="true">{{ separator }}</li>
+      {% endif %}
+      
+      <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <span class="current" itemprop="name">{{ product.title }}</span>
+        <meta itemprop="item" content="{{ shop.url }}{{ product.url }}" />
+        <meta itemprop="position" content="{% if collection %}3{% else %}2{% endif %}" />
+      </li>
+    
+    {% elsif template contains 'collection' %}
+      {% if collection.handle != 'all' %}
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <span class="current" itemprop="name">{{ collection.title }}</span>
+          <meta itemprop="item" content="{{ shop.url }}{{ collection.url }}" />
+          <meta itemprop="position" content="2" />
+        </li>
+      {% else %}
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <span class="current" itemprop="name">All Products</span>
+          <meta itemprop="item" content="{{ shop.url }}/collections/all" />
+          <meta itemprop="position" content="2" />
+        </li>
+      {% endif %}
+      
+    {% elsif template contains 'blog' %}
+      <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <span class="current" itemprop="name">{{ blog.title }}</span>
+        <meta itemprop="item" content="{{ shop.url }}{{ blog.url }}" />
+        <meta itemprop="position" content="2" />
+      </li>
+      
+    {% elsif template contains 'article' %}
+      <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a href="{{ blog.url }}" itemprop="item">
+          <span itemprop="name">{{ blog.title }}</span>
+        </a>
+        <meta itemprop="position" content="2" />
+      </li>
+      <li class="separator" aria-hidden="true">{{ separator }}</li>
+      <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <span class="current" itemprop="name">{{ article.title }}</span>
+        <meta itemprop="item" content="{{ shop.url }}{{ article.url }}" />
+        <meta itemprop="position" content="3" />
+      </li>
+      
+    {% elsif template contains 'page' %}
+      <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <span class="current" itemprop="name">{{ page.title }}</span>
+        <meta itemprop="item" content="{{ shop.url }}{{ page.url }}" />
+        <meta itemprop="position" content="2" />
+      </li>
+      
+    {% elsif template contains 'cart' %}
+      <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <span class="current" itemprop="name">Shopping Cart</span>
+        <meta itemprop="item" content="{{ shop.url }}/cart" />
+        <meta itemprop="position" content="2" />
+      </li>
+      
+    {% elsif template contains 'search' %}
+      <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <span class="current" itemprop="name">Search Results</span>
+        <meta itemprop="item" content="{{ shop.url }}/search" />
+        <meta itemprop="position" content="2" />
+      </li>
+      
+    {% elsif template == '404' %}
+      <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <span class="current" itemprop="name">Page Not Found</span>
+        <meta itemprop="item" content="{{ shop.url }}/404" />
+        <meta itemprop="position" content="2" />
+      </li>
+      
+    {% else %}
+      <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <span class="current" itemprop="name">{{ page_title }}</span>
+        <meta itemprop="item" content="{{ shop.url }}{{ request.path }}" />
+        <meta itemprop="position" content="2" />
+      </li>
+    {% endif %}
+  </ol>
+</nav>
+
+{% comment %}
+  Add Schema.org JSON-LD for SEO
+{% endcomment %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "{{ home_text }}",
+      "item": "{{ shop.url }}"
+    }
+    {% if template contains 'product' %}
+      {% if collection and collection.handle != 'all' %}
+      ,{
+        "@type": "ListItem",
+        "position": 2,
+        "name": {{ collection.title | json }},
+        "item": "{{ shop.url }}{{ collection.url }}"
+      }
+      {% elsif product.collections.size > 0 %}
+      ,{
+        "@type": "ListItem",
+        "position": 2,
+        "name": {{ product.collections.first.title | json }},
+        "item": "{{ shop.url }}{{ product.collections.first.url }}"
+      }
+      {% endif %}
+      ,{
+        "@type": "ListItem",
+        "position": {% if collection or product.collections.size > 0 %}3{% else %}2{% endif %},
+        "name": {{ product.title | json }},
+        "item": "{{ shop.url }}{{ product.url }}"
+      }
+    {% elsif template contains 'collection' %}
+      ,{
+        "@type": "ListItem",
+        "position": 2,
+        "name": {% if collection.handle != 'all' %}{{ collection.title | json }}{% else %}"All Products"{% endif %},
+        "item": "{{ shop.url }}{{ collection.url }}"
+      }
+    {% elsif template contains 'blog' %}
+      ,{
+        "@type": "ListItem",
+        "position": 2,
+        "name": {{ blog.title | json }},
+        "item": "{{ shop.url }}{{ blog.url }}"
+      }
+    {% elsif template contains 'article' %}
+      ,{
+        "@type": "ListItem",
+        "position": 2,
+        "name": {{ blog.title | json }},
+        "item": "{{ shop.url }}{{ blog.url }}"
+      }
+      ,{
+        "@type": "ListItem",
+        "position": 3,
+        "name": {{ article.title | json }},
+        "item": "{{ shop.url }}{{ article.url }}"
+      }
+    {% elsif template contains 'page' %}
+      ,{
+        "@type": "ListItem",
+        "position": 2,
+        "name": {{ page.title | json }},
+        "item": "{{ shop.url }}{{ page.url }}"
+      }
+    {% elsif template contains 'cart' %}
+      ,{
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Shopping Cart",
+        "item": "{{ shop.url }}/cart"
+      }
+    {% elsif template contains 'search' %}
+      ,{
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Search Results",
+        "item": "{{ shop.url }}/search"
+      }
+    {% elsif template == '404' %}
+      ,{
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Page Not Found",
+        "item": "{{ shop.url }}/404"
+      }
+    {% else %}
+      ,{
+        "@type": "ListItem",
+        "position": 2,
+        "name": {{ page_title | json }},
+        "item": "{{ shop.url }}{{ request.path }}"
+      }
+    {% endif %}
+  ]
+}
+</script>
+
+{% if request.path contains '?debug=true' %}
+  <div style="background: #f8f8f8; border: 1px solid #ddd; padding: 10px; margin: 10px 0; font-family: monospace; font-size: 12px;">
+    <strong>Debug Info:</strong><br>
+    Template: {{ template }}<br>
+    Path: {{ request.path }}<br>
+    {% if template contains 'product' %}
+      Product: {{ product.title }}<br>
+      Collection: {% if collection %}{{ collection.title }}{% elsif product.collections.size > 0 %}{{ product.collections.first.title }}{% else %}None{% endif %}<br>
+    {% elsif template contains 'collection' %}
+      Collection: {{ collection.title }}<br>
+      Handle: {{ collection.handle }}<br>
+    {% endif %}
   </div>
 {% endif %} 
