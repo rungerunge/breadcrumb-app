@@ -5,128 +5,140 @@ Improved navigation with better page type handling and accessibility
 
 {{ 'breadcrumb-styles.css' | asset_url | stylesheet_tag }}
 
-<div class="smart-breadcrumb" role="navigation" aria-label="breadcrumbs">
-  <ul class="smart-breadcrumb__list">
-    <li>
-      <a href="{{ shop.url }}" class="smart-breadcrumb__link">
-        <span>Home</span>
-      </a>
-    </li>
+{%- unless template == 'index' or template == 'cart' or template == 'list-collections' or template == '404' -%}
+{%- assign t = template | split: '.' | first -%}
 
-    {% if template contains 'product' %}
-      <span class="breadcrumbs-arrow" aria-hidden="true">{% render 'breadcrumbs-arrow' %}</span>
-      {% if collection %}
-        <li>
-          <a href="{{ collection.url }}" class="smart-breadcrumb__link">
-            <span>{{ collection.title }}</span>
-          </a>
-        </li>
-        <span class="breadcrumbs-arrow" aria-hidden="true">{% render 'breadcrumbs-arrow' %}</span>
-      {% endif %}
-      <li>
-        <span class="smart-breadcrumb__current">{{ product.title }}</span>
+<div class="smart-breadcrumb-container" style="background-color: {{ block.settings.background_color }};">
+  <nav class="breadcrumbs" role="navigation" aria-label="breadcrumbs">
+    <ol class="breadcrumbs__list">
+      <li class="breadcrumbs__item">
+        <a class="breadcrumbs__link" href="/">Home</a>
       </li>
-
-    {% elsif template contains 'collection' and collection.handle %}
-      <span class="breadcrumbs-arrow" aria-hidden="true">{% render 'breadcrumbs-arrow' %}</span>
-      <li>
-        <span class="smart-breadcrumb__current">{{ collection.title }}</span>
-      </li>
-
-    {% elsif template contains 'blog' %}
-      <span class="breadcrumbs-arrow" aria-hidden="true">{% render 'breadcrumbs-arrow' %}</span>
-      <li>
-        <span class="smart-breadcrumb__current">{{ blog.title }}</span>
-      </li>
-
-    {% elsif template contains 'article' %}
-      <span class="breadcrumbs-arrow" aria-hidden="true">{% render 'breadcrumbs-arrow' %}</span>
-      <li>
-        <a href="{{ blog.url }}" class="smart-breadcrumb__link">
-          <span>{{ blog.title }}</span>
-        </a>
-      </li>
-      <span class="breadcrumbs-arrow" aria-hidden="true">{% render 'breadcrumbs-arrow' %}</span>
-      <li>
-        <span class="smart-breadcrumb__current">{{ article.title }}</span>
-      </li>
-
-    {% elsif template contains 'page' %}
-      <span class="breadcrumbs-arrow" aria-hidden="true">{% render 'breadcrumbs-arrow' %}</span>
-      <li>
-        <span class="smart-breadcrumb__current">{{ page.title }}</span>
-      </li>
-
-    {% elsif template contains 'cart' %}
-      <span class="breadcrumbs-arrow" aria-hidden="true">{% render 'breadcrumbs-arrow' %}</span>
-      <li>
-        <span class="smart-breadcrumb__current">Shopping Cart</span>
-      </li>
-
-    {% elsif template contains 'search' %}
-      <span class="breadcrumbs-arrow" aria-hidden="true">{% render 'breadcrumbs-arrow' %}</span>
-      <li>
-        <span class="smart-breadcrumb__current">Search Results</span>
-      </li>
-
-    {% else %}
-      <span class="breadcrumbs-arrow" aria-hidden="true">{% render 'breadcrumbs-arrow' %}</span>
-      <li>
-        <span class="smart-breadcrumb__current">{{ page_title }}</span>
-      </li>
-    {% endif %}
-  </ul>
+      {%- case t -%}
+        {%- when 'page' -%}
+          <li class="breadcrumbs__item">
+            <a class="breadcrumbs__link" href="{{ page.url }}" aria-current="page">{{ page.title }}</a>
+          </li>
+        {%- when 'product' -%}
+          {%- if collection.url -%}
+            <li class="breadcrumbs__item">
+              {{ collection.title | link_to: collection.url }}
+            </li>
+          {%- endif -%}
+          <li class="breadcrumbs__item">
+            <a class="breadcrumbs__link" href="{{ product.url }}" aria-current="page">{{ product.title }}</a>
+          </li>
+        {%- when 'collection' and collection.handle -%}
+          {%- if current_tags -%}
+            <li class="breadcrumbs__item">
+              {{ collection.title | link_to: collection.url }}
+            </li>
+            <li class="breadcrumbs__item">
+              {%- capture tag_url -%}{{ collection.url }}/{{ current_tags | join: "+"}}{%- endcapture -%}
+              <a class="breadcrumbs__link" href="{{ tag_url }}" aria-current="page">{{ current_tags | join: " + "}}</a>
+            </li>
+          {%- else -%}
+            <li class="breadcrumbs__item">
+              <a class="breadcrumbs__link" href="{{ collection.url }}" aria-current="page">{{ collection.title }}</a>
+            </li>
+          {%- endif -%}
+        {%- when 'blog' -%}
+          {%- if current_tags -%}
+            <li class="breadcrumbs__item">
+              {{ blog.title | link_to: blog.url }}
+            </li>
+            <li class="breadcrumbs__item">
+              {%- capture tag_url -%}{{blog.url}}/tagged/{{ current_tags | join: "+" }}{%- endcapture -%}
+              <a class="breadcrumbs__link" href="{{ tag_url }}" aria-current="page">{{ current_tags | join: " + " }}</a>
+            </li>
+          {%- else -%}
+            <li class="breadcrumbs__item">
+              <a class="breadcrumbs__link" href="{{ blog.url }}" aria-current="page">{{ blog.title }}</a>
+            </li>
+          {%- endif -%}
+        {%- when 'article' -%}
+          <li class="breadcrumbs__item">
+            {{ blog.title | link_to: blog.url }}
+          </li>
+          <li class="breadcrumbs__item">
+            <a class="breadcrumbs__link" href="{{ article.url }}" aria-current="page">{{ article.title }}</a>
+          </li>
+        {%- else -%}
+          <li class="breadcrumbs__item">
+            <a class="breadcrumbs__link" href="{{ request.path }}" aria-current="page">{{ page_title }}</a>
+          </li>
+      {%- endcase -%}
+    </ol>
+  </nav>
 </div>
 
 <style>
-  .smart-breadcrumb {
-    background-color: {{ block.settings.background_color | default: '#f6f6f6' }};
-    padding: 10px 15px;
-    margin-bottom: 20px;
+  .smart-breadcrumb-container {
+    width: 100%;
+    padding: 1rem;
+    margin-bottom: 1rem;
   }
 
-  .smart-breadcrumb__list {
+  .breadcrumbs {
+    max-width: var(--page-width);
+    margin: 0 auto;
+  }
+
+  .breadcrumbs__list {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    gap: 8px;
+    gap: 0.5rem;
   }
 
-  .smart-breadcrumb__link {
-    color: {{ block.settings.link_color | default: '#000000' }};
-    text-decoration: none;
-    font-size: 14px;
-    transition: opacity 0.2s;
-  }
-
-  .smart-breadcrumb__link:hover {
-    opacity: 0.7;
-  }
-
-  .smart-breadcrumb__current {
-    color: {{ block.settings.text_color | default: '#000000' }};
-    font-weight: 500;
-    font-size: 14px;
-  }
-
-  .breadcrumbs-arrow {
-    display: flex;
+  .breadcrumbs__item {
+    display: inline-flex;
     align-items: center;
-    color: {{ block.settings.text_color | default: '#000000' }};
+    font-size: 14px;
+    color: {{ block.settings.text_color }};
+  }
+
+  .breadcrumbs__item:not(:last-child):after {
+    border-style: solid;
+    border-width: .10em .10em 0 0;
+    content: '';
+    display: inline-block;
+    height: .20em;
+    margin: 0 .20em;
+    position: relative;
+    transform: rotate(45deg);
+    vertical-align: middle;
+    width: .20em;
+    color: {{ block.settings.text_color }};
     opacity: 0.5;
   }
 
+  .breadcrumbs__link {
+    color: {{ block.settings.link_color }};
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+
+  .breadcrumbs__link:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+  }
+
+  .breadcrumbs__link[aria-current="page"] {
+    color: {{ block.settings.text_color }};
+    font-weight: 500;
+  }
+
   @media screen and (max-width: 749px) {
-    .smart-breadcrumb {
-      padding: 8px 10px;
-      margin-bottom: 15px;
+    .smart-breadcrumb-container {
+      padding: 0.75rem;
+      margin-bottom: 0.75rem;
     }
 
-    .smart-breadcrumb__link,
-    .smart-breadcrumb__current {
+    .breadcrumbs__item {
       font-size: 12px;
     }
   }
