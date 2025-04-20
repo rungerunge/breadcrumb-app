@@ -1,13 +1,24 @@
+{% comment %}
+  Smart Breadcrumbs - Main Block
+  Version 2.2.0
+  
+  This is now using the ultra-simple implementation to guarantee collection display
+{% endcomment %}
+
+{% render 'ultra-simple-breadcrumb' %}
+
 {% schema %}
 {
   "name": "Smart Breadcrumbs",
   "target": "section",
-  "stylesheet": "breadcrumbs.css",
-  "javascript": "",
   "settings": [
     {
       "type": "header",
-      "content": "Layout Settings"
+      "content": "Ultra Simple Breadcrumb"
+    },
+    {
+      "type": "paragraph",
+      "content": "A simplified breadcrumb with guaranteed collection display for product pages."
     },
     {
       "type": "range",
@@ -43,22 +54,20 @@
       "type": "text",
       "id": "separator",
       "label": "Breadcrumb Separator",
-      "default": "›"
+      "default": "/"
     }
   ]
 }
 {% endschema %}
 
-{% render 'smart-breadcrumbs' %}
-
 <style>
-  .breadcrumb-container {
+  .ultra-breadcrumb {
     margin-top: {{ block.settings.margin_top }}px;
     margin-bottom: {{ block.settings.margin_bottom }}px;
     font-size: {{ block.settings.font_size }}px;
   }
 
-  .breadcrumb-item:not(:last-child):after {
+  .ultra-breadcrumb__separator {
     content: '{{ block.settings.separator }}';
   }
 </style> 

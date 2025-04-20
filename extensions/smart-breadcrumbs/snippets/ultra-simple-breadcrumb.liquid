@@ -1,7 +1,9 @@
 {% comment %}
-  Ultra Simple Breadcrumb v1.0
-  A minimal, no-frills breadcrumb implementation with guaranteed collection display
+  Ultra Simple Breadcrumb v1.1
+  A minimal breadcrumb implementation with guaranteed collection display
 {% endcomment %}
+
+{% assign separator = block.settings.separator | default: '/' %}
 
 <style>
   .ultra-breadcrumb {
@@ -52,7 +54,7 @@
 <div class="ultra-breadcrumb">
   <!-- Home link (always present) -->
   <a href="/">Home</a>
-  <span class="ultra-breadcrumb__separator">/</span>
+  <span class="ultra-breadcrumb__separator">{{ separator }}</span>
   
   {% if template contains 'product' %}
     {% comment %}
@@ -65,7 +67,7 @@
     {% assign collection_title = "" %}
     
     {% comment %}Check for current collection context{% endcomment %}
-    {% if collection %}
+    {% if collection and collection.handle != 'all' %}
       {% assign show_collection = true %}
       {% assign collection_url = collection.url %}
       {% assign collection_title = collection.title %}
@@ -84,7 +86,7 @@
     {% comment %}If collection was found, show it{% endcomment %}
     {% if show_collection %}
       <a href="{{ collection_url }}">{{ collection_title }}</a>
-      <span class="ultra-breadcrumb__separator">/</span>
+      <span class="ultra-breadcrumb__separator">{{ separator }}</span>
     {% endif %}
     
     <!-- Product title (current page) -->
