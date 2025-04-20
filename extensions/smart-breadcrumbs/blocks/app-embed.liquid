@@ -1,0 +1,25 @@
+{% comment %}
+Smart Breadcrumbs App Embed Block v2.1.0
+This block registers the breadcrumb navigation in the theme
+{% endcomment %}
+
+{% if request.page_type != "index" %}
+  <div class="smart-breadcrumbs-container">
+    {% render 'app-block' %}
+  </div>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Smart Breadcrumbs",
+  "target": "section",
+  "javascript": "breadcrumbs.js",
+  "stylesheet": "breadcrumb-styles.css",
+  "settings": [],
+  "presets": [
+    {
+      "name": "Smart Breadcrumbs"
+    }
+  ]
+}
+{% endschema %} 

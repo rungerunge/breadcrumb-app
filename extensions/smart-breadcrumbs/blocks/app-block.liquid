@@ -5,69 +5,7 @@ Improved navigation with better page type handling and accessibility
 
 {{ 'breadcrumb-styles.css' | asset_url | stylesheet_tag }}
 
-<style>
-  #shopify-section-{{ section.id }} .smart-breadcrumb {
-    background-color: {{ block.settings.background_color }};
-    padding: 10px 0;
-  }
-  
-  #shopify-section-{{ section.id }} .smart-breadcrumb__list {
-    margin: 0;
-    padding: 0 1rem;
-    list-style-type: none;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  
-  #shopify-section-{{ section.id }} .smart-breadcrumb__link {
-    color: {{ block.settings.link_color }};
-    text-decoration: none;
-    font-size: 14px;
-    line-height: 20px;
-    transition: opacity 0.2s ease;
-  }
-  
-  #shopify-section-{{ section.id }} .smart-breadcrumb__link:hover {
-    opacity: 0.8;
-    text-decoration: underline;
-  }
-  
-  #shopify-section-{{ section.id }} .smart-breadcrumb__current {
-    color: {{ block.settings.text_color }};
-    font-weight: 500;
-  }
-  
-  #shopify-section-{{ section.id }} .breadcrumbs-arrow {
-    color: {{ block.settings.text_color }};
-    opacity: 0.5;
-    display: flex;
-    align-items: center;
-  }
-  
-  @media screen and (max-width: 749px) {
-    {% if block.settings.hide_on_mobile %}
-      #shopify-section-{{ section.id }} {
-        display: none;
-      }
-    {% else %}
-      #shopify-section-{{ section.id }} .smart-breadcrumb {
-        padding: 8px 0;
-      }
-      #shopify-section-{{ section.id }} .smart-breadcrumb__list {
-        padding: 0 0.75rem;
-        gap: 8px;
-      }
-      #shopify-section-{{ section.id }} .smart-breadcrumb__link,
-      #shopify-section-{{ section.id }} .smart-breadcrumb__current {
-        font-size: 12px;
-        line-height: 16px;
-      }
-    {% endif %}
-  }
-</style>
-
-<nav class="smart-breadcrumb" role="navigation" aria-label="breadcrumbs">
+<div class="smart-breadcrumb" role="navigation" aria-label="breadcrumbs">
   <ul class="smart-breadcrumb__list">
     <li>
       <a href="{{ shop.url }}" class="smart-breadcrumb__link">
@@ -75,62 +13,33 @@ Improved navigation with better page type handling and accessibility
       </a>
     </li>
 
-    {% if template contains 'page' %}
+    {% if template contains 'product' %}
       <span class="breadcrumbs-arrow" aria-hidden="true">{% render 'breadcrumbs-arrow' %}</span>
-      <li>
-        <span class="smart-breadcrumb__current">{{ page.title }}</span>
-      </li>
-
-    {% elsif template contains 'product' %}
       {% if collection %}
-        <span class="breadcrumbs-arrow" aria-hidden="true">{% render 'breadcrumbs-arrow' %}</span>
         <li>
           <a href="{{ collection.url }}" class="smart-breadcrumb__link">
             <span>{{ collection.title }}</span>
           </a>
         </li>
-      {% elsif product.collections.size > 0 %}
-        {% assign main_collection = product.collections | first %}
-        {% if main_collection.handle != 'all' %}
-          <span class="breadcrumbs-arrow" aria-hidden="true">{% render 'breadcrumbs-arrow' %}</span>
-          <li>
-            <a href="{{ main_collection.url }}" class="smart-breadcrumb__link">
-              <span>{{ main_collection.title }}</span>
-            </a>
-          </li>
-        {% endif %}
+        <span class="breadcrumbs-arrow" aria-hidden="true">{% render 'breadcrumbs-arrow' %}</span>
       {% endif %}
-      <span class="breadcrumbs-arrow" aria-hidden="true">{% render 'breadcrumbs-arrow' %}</span>
       <li>
         <span class="smart-breadcrumb__current">{{ product.title }}</span>
       </li>
 
     {% elsif template contains 'collection' and collection.handle %}
-      {% if current_tags %}
-        <span class="breadcrumbs-arrow" aria-hidden="true">{% render 'breadcrumbs-arrow' %}</span>
-        <li>
-          <a href="{{ collection.url }}" class="smart-breadcrumb__link">
-            <span>{{ collection.title }}</span>
-          </a>
-        </li>
-        <span class="breadcrumbs-arrow" aria-hidden="true">{% render 'breadcrumbs-arrow' %}</span>
-        <li>
-          <span class="smart-breadcrumb__current">{{ current_tags | join: ' + ' }}</span>
-        </li>
-      {% else %}
-        <span class="breadcrumbs-arrow" aria-hidden="true">{% render 'breadcrumbs-arrow' %}</span>
-        <li>
-          <span class="smart-breadcrumb__current">{{ collection.title }}</span>
-        </li>
-      {% endif %}
+      <span class="breadcrumbs-arrow" aria-hidden="true">{% render 'breadcrumbs-arrow' %}</span>
+      <li>
+        <span class="smart-breadcrumb__current">{{ collection.title }}</span>
+      </li>
 
-    {% elsif template == 'blog' %}
+    {% elsif template contains 'blog' %}
       <span class="breadcrumbs-arrow" aria-hidden="true">{% render 'breadcrumbs-arrow' %}</span>
       <li>
         <span class="smart-breadcrumb__current">{{ blog.title }}</span>
       </li>
 
-    {% elsif template == 'article' %}
+    {% elsif template contains 'article' %}
       <span class="breadcrumbs-arrow" aria-hidden="true">{% render 'breadcrumbs-arrow' %}</span>
       <li>
         <a href="{{ blog.url }}" class="smart-breadcrumb__link">
@@ -142,13 +51,19 @@ Improved navigation with better page type handling and accessibility
         <span class="smart-breadcrumb__current">{{ article.title }}</span>
       </li>
 
-    {% elsif template == 'cart' %}
+    {% elsif template contains 'page' %}
+      <span class="breadcrumbs-arrow" aria-hidden="true">{% render 'breadcrumbs-arrow' %}</span>
+      <li>
+        <span class="smart-breadcrumb__current">{{ page.title }}</span>
+      </li>
+
+    {% elsif template contains 'cart' %}
       <span class="breadcrumbs-arrow" aria-hidden="true">{% render 'breadcrumbs-arrow' %}</span>
       <li>
         <span class="smart-breadcrumb__current">Shopping Cart</span>
       </li>
 
-    {% elsif template == 'search' %}
+    {% elsif template contains 'search' %}
       <span class="breadcrumbs-arrow" aria-hidden="true">{% render 'breadcrumbs-arrow' %}</span>
       <li>
         <span class="smart-breadcrumb__current">Search Results</span>
@@ -161,26 +76,67 @@ Improved navigation with better page type handling and accessibility
       </li>
     {% endif %}
   </ul>
+</div>
 
-  {% if debug_mode %}
-    <div class="smart-breadcrumb__debug">
-      <div class="smart-breadcrumb__debug-title">Debug Information:</div>
-      Template: {{ template.name }}<br>
-      Path: {{ request.path }}<br>
-      Page Type: {{ request.page_type }}
-    </div>
-  {% endif %}
-</nav>
+<style>
+  .smart-breadcrumb {
+    background-color: {{ block.settings.background_color | default: '#f6f6f6' }};
+    padding: 10px 15px;
+    margin-bottom: 20px;
+  }
+
+  .smart-breadcrumb__list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    gap: 8px;
+  }
+
+  .smart-breadcrumb__link {
+    color: {{ block.settings.link_color | default: '#000000' }};
+    text-decoration: none;
+    font-size: 14px;
+    transition: opacity 0.2s;
+  }
+
+  .smart-breadcrumb__link:hover {
+    opacity: 0.7;
+  }
+
+  .smart-breadcrumb__current {
+    color: {{ block.settings.text_color | default: '#000000' }};
+    font-weight: 500;
+    font-size: 14px;
+  }
+
+  .breadcrumbs-arrow {
+    display: flex;
+    align-items: center;
+    color: {{ block.settings.text_color | default: '#000000' }};
+    opacity: 0.5;
+  }
+
+  @media screen and (max-width: 749px) {
+    .smart-breadcrumb {
+      padding: 8px 10px;
+      margin-bottom: 15px;
+    }
+
+    .smart-breadcrumb__link,
+    .smart-breadcrumb__current {
+      font-size: 12px;
+    }
+  }
+</style>
 
 {% schema %}
 {
   "name": "Smart Breadcrumbs",
   "target": "section",
   "settings": [
-    {
-      "type": "header",
-      "content": "Breadcrumb Settings"
-    },
     {
       "type": "color",
       "id": "background_color",
@@ -198,23 +154,6 @@ Improved navigation with better page type handling and accessibility
       "id": "link_color",
       "label": "Link Color",
       "default": "#000000"
-    },
-    {
-      "type": "header",
-      "content": "Advanced Settings"
-    },
-    {
-      "type": "checkbox",
-      "id": "hide_on_mobile",
-      "label": "Hide on mobile devices",
-      "default": false
-    },
-    {
-      "type": "checkbox",
-      "id": "enable_schema",
-      "label": "Enable Schema Markup (SEO)",
-      "default": true,
-      "info": "Adds structured data for improved SEO"
     }
   ]
 }
