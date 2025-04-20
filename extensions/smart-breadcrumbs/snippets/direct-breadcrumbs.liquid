@@ -1,0 +1,113 @@
+{%- comment -%}
+Direct Breadcrumbs Snippet v3.0
+Simplified implementation for direct insertion in theme files
+{%- endcomment -%}
+
+<div class="direct-breadcrumbs" data-version="3.0">
+  <div class="direct-breadcrumbs__container">
+    <a href="/" class="direct-breadcrumbs__home">Home</a>
+    
+    {%- if template contains 'product' -%}
+      <span class="direct-breadcrumbs__separator">/</span>
+      {%- if collection -%}
+        <a href="{{ collection.url }}" class="direct-breadcrumbs__link">{{ collection.title }}</a>
+      {%- elsif product.collections.size > 0 -%}
+        {%- for collection in product.collections limit:1 -%}
+          {%- if collection.handle != 'all' -%}
+            <a href="{{ collection.url }}" class="direct-breadcrumbs__link">{{ collection.title }}</a>
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endif -%}
+      <span class="direct-breadcrumbs__separator">/</span>
+      <span class="direct-breadcrumbs__current">{{ product.title }}</span>
+      
+    {%- elsif template contains 'collection' -%}
+      <span class="direct-breadcrumbs__separator">/</span>
+      <span class="direct-breadcrumbs__current">{{ collection.title }}</span>
+      
+    {%- elsif template contains 'page' -%}
+      <span class="direct-breadcrumbs__separator">/</span>
+      <span class="direct-breadcrumbs__current">{{ page.title }}</span>
+      
+    {%- elsif template contains 'blog' -%}
+      <span class="direct-breadcrumbs__separator">/</span>
+      <span class="direct-breadcrumbs__current">{{ blog.title }}</span>
+      
+    {%- elsif template contains 'article' -%}
+      <span class="direct-breadcrumbs__separator">/</span>
+      <a href="{{ blog.url }}" class="direct-breadcrumbs__link">{{ blog.title }}</a>
+      <span class="direct-breadcrumbs__separator">/</span>
+      <span class="direct-breadcrumbs__current">{{ article.title }}</span>
+      
+    {%- else -%}
+      <span class="direct-breadcrumbs__separator">/</span>
+      <span class="direct-breadcrumbs__current">{{ page_title }}</span>
+    {%- endif -%}
+  </div>
+</div>
+
+<style>
+  .direct-breadcrumbs {
+    width: 100%;
+    padding: 10px 0;
+    margin-bottom: 20px;
+    background-color: #f6f6f6;
+  }
+  
+  .direct-breadcrumbs__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  
+  .direct-breadcrumbs__home,
+  .direct-breadcrumbs__link {
+    color: #0066cc;
+    text-decoration: none;
+    font-size: 14px;
+    transition: opacity 0.2s;
+  }
+  
+  .direct-breadcrumbs__home:hover,
+  .direct-breadcrumbs__link:hover {
+    text-decoration: underline;
+    opacity: 0.8;
+  }
+  
+  .direct-breadcrumbs__separator {
+    margin: 0 8px;
+    color: #999;
+    font-size: 14px;
+  }
+  
+  .direct-breadcrumbs__current {
+    color: #333;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  @media screen and (max-width: 749px) {
+    .direct-breadcrumbs {
+      padding: 8px 0;
+      margin-bottom: 15px;
+    }
+    
+    .direct-breadcrumbs__container {
+      padding: 0 10px;
+    }
+    
+    .direct-breadcrumbs__home,
+    .direct-breadcrumbs__link,
+    .direct-breadcrumbs__separator,
+    .direct-breadcrumbs__current {
+      font-size: 12px;
+    }
+    
+    .direct-breadcrumbs__separator {
+      margin: 0 6px;
+    }
+  }
+</style> 
