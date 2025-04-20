@@ -10,12 +10,11 @@ name = "Smart Breadcrumbs"
 handle = "breadcrumbs"
 template = ["index", "product", "collection", "page", "cart", "blog", "article"]
 
+# CSS-only assets
 [[assets]]
-type = "script"
-handle = "breadcrumb-helper"
-path = "assets/breadcrumb-helper.js"
-load = "defer"
-includes = ["product"]
+type = "style"
+handle = "breadcrumbs-styles"
+path = "assets/breadcrumbs.css"
 
 [[settings]]
   [[settings.input]]
@@ -179,26 +178,10 @@ includes = ["product"]
   label = "Use uppercase text"
   default = false
 
-# Extension assets
+# Extension assets - CSS only
 [[files]]
 handle = "breadcrumbs.css"
 path = "assets/breadcrumbs.css"
-
-[[files]]
-handle = "breadcrumbs.js"
-path = "assets/breadcrumbs.js"
-
-[[files]]
-handle = "breadcrumb-settings.js"
-path = "assets/breadcrumb-settings.js"
-
-[[files]]
-handle = "menu-parser.js"
-path = "assets/menu-parser.js"
-
-[[files]]
-handle = "breadcrumb-client.js"
-path = "assets/breadcrumb-client.js"
 
 # Extension snippets
 [[files]]
@@ -221,6 +204,14 @@ path = "snippets/smart-breadcrumbs-page.liquid"
 [[files]]
 handle = "breadcrumbs"
 path = "blocks/breadcrumbs.liquid"
+
+[[files]]
+handle = "app-block"
+path = "blocks/app-block.liquid"
+
+[[files]]
+handle = "script-disabler"
+path = "blocks/script-disabler.liquid"
 
 # Extension sections
 [[files]]

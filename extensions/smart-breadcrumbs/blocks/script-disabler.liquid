@@ -1,0 +1,52 @@
+{% comment %}
+  Smart Breadcrumbs - Script Disabler
+  This block prevents any JavaScript from loading
+{% endcomment %}
+
+<script type="text/javascript">
+  // Run this as early as possible in the page load
+  (function() {
+    // Create an interceptor for script tags
+    const originalCreateElement = document.createElement;
+    
+    document.createElement = function(tagName) {
+      const element = originalCreateElement.apply(document, arguments);
+      
+      // If a script tag is created and it contains breadcrumbs
+      if (tagName.toLowerCase() === 'script') {
+        const originalSetAttribute = element.setAttribute;
+        
+        element.setAttribute = function(name, value) {
+          // If it's trying to load any breadcrumb scripts, replace with empty
+          if (name === 'src' && value && 
+              (value.includes('breadcrumbs.js') || 
+               value.includes('breadcrumb-') || 
+               value.includes('smart-breadcrumbs'))) {
+            console.log('Blocked loading of breadcrumb script:', value);
+            return originalSetAttribute.call(this, 'src', 'data:text/javascript,//disabled');
+          }
+          return originalSetAttribute.apply(this, arguments);
+        };
+      }
+      
+      return element;
+    };
+    
+    // Find and disable any existing breadcrumb scripts
+    setTimeout(function() {
+      const scripts = document.querySelectorAll('script[src*="breadcrumbs"], script[src*="breadcrumb-"]');
+      scripts.forEach(function(script) {
+        script.src = 'data:text/javascript,//disabled';
+        console.log('Disabled existing breadcrumb script');
+      });
+    }, 0);
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Script Disabler",
+  "target": "head",
+  "settings": []
+}
+{% endschema %} 
