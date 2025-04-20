@@ -1,0 +1,37 @@
+<!-- Static Breadcrumbs v1.0 - Guaranteed to work -->
+<div style="width:100%;padding:10px 0;margin-bottom:20px;background-color:#f6f6f6;font-family:sans-serif;">
+  <div style="max-width:1200px;margin:0 auto;padding:0 15px;display:flex;flex-wrap:wrap;align-items:center;">
+    <a href="/" style="color:#0066cc;text-decoration:none;font-size:14px;">Home</a>
+    <span style="margin:0 8px;color:#999;font-size:14px;">/</span>
+    
+    <!-- This will add the collection link if available -->
+    {% if collection and collection.url %}
+      <a href="{{ collection.url }}" style="color:#0066cc;text-decoration:none;font-size:14px;">{{ collection.title }}</a>
+      <span style="margin:0 8px;color:#999;font-size:14px;">/</span>
+    {% elsif product.collections.size > 0 and template contains 'product' %}
+      {% for collection in product.collections limit:1 %}
+        {% if collection.handle != 'all' %}
+          <a href="{{ collection.url }}" style="color:#0066cc;text-decoration:none;font-size:14px;">{{ collection.title }}</a>
+          <span style="margin:0 8px;color:#999;font-size:14px;">/</span>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+    
+    <!-- Current page title -->
+    <span style="color:#333;font-size:14px;font-weight:500;">
+      {% if product %}
+        {{ product.title }}
+      {% elsif collection %}
+        {{ collection.title }}
+      {% elsif page %}
+        {{ page.title }}
+      {% elsif template contains 'cart' %}
+        Cart
+      {% elsif template contains 'search' %}
+        Search Results
+      {% else %}
+        {{ page_title }}
+      {% endif %}
+    </span>
+  </div>
+</div> 
