@@ -1,0 +1,129 @@
+{% comment %}
+Simple Breadcrumb Block v1.0
+No JavaScript, no dependencies, guaranteed to work
+{% endcomment %}
+
+<style>
+.simple-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 10px 15px;
+  margin-bottom: 20px;
+  background-color: {{ block.settings.background_color }};
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+}
+
+.simple-breadcrumb a {
+  color: {{ block.settings.link_color }};
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.simple-breadcrumb a:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.simple-breadcrumb__separator {
+  margin: 0 8px;
+  color: #999;
+}
+
+.simple-breadcrumb__current {
+  color: {{ block.settings.text_color }};
+  font-weight: 500;
+}
+
+@media (max-width: 749px) {
+  .simple-breadcrumb {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+}
+</style>
+
+{% if template != 'index' %}
+<div class="simple-breadcrumb">
+  <a href="/">Home</a>
+  
+  {% if template contains 'product' %}
+    <span class="simple-breadcrumb__separator">/</span>
+    {% if collection %}
+      <a href="{{ collection.url }}">{{ collection.title }}</a>
+      <span class="simple-breadcrumb__separator">/</span>
+    {% elsif product.collections.size > 0 %}
+      {% for collection in product.collections limit:1 %}
+        {% if collection.handle != 'all' %}
+          <a href="{{ collection.url }}">{{ collection.title }}</a>
+          <span class="simple-breadcrumb__separator">/</span>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+    <span class="simple-breadcrumb__current">{{ product.title }}</span>
+    
+  {% elsif template contains 'collection' %}
+    <span class="simple-breadcrumb__separator">/</span>
+    <span class="simple-breadcrumb__current">{{ collection.title }}</span>
+    
+  {% elsif template contains 'blog' %}
+    <span class="simple-breadcrumb__separator">/</span>
+    <span class="simple-breadcrumb__current">{{ blog.title }}</span>
+    
+  {% elsif template contains 'article' %}
+    <span class="simple-breadcrumb__separator">/</span>
+    <a href="{{ blog.url }}">{{ blog.title }}</a>
+    <span class="simple-breadcrumb__separator">/</span>
+    <span class="simple-breadcrumb__current">{{ article.title }}</span>
+    
+  {% elsif template contains 'page' %}
+    <span class="simple-breadcrumb__separator">/</span>
+    <span class="simple-breadcrumb__current">{{ page.title }}</span>
+    
+  {% elsif template contains 'cart' %}
+    <span class="simple-breadcrumb__separator">/</span>
+    <span class="simple-breadcrumb__current">Shopping Cart</span>
+    
+  {% elsif template contains 'search' %}
+    <span class="simple-breadcrumb__separator">/</span>
+    <span class="simple-breadcrumb__current">Search Results</span>
+    
+  {% else %}
+    <span class="simple-breadcrumb__separator">/</span>
+    <span class="simple-breadcrumb__current">{{ page_title }}</span>
+  {% endif %}
+</div>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Simple Breadcrumbs",
+  "target": "section",
+  "settings": [
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background Color",
+      "default": "#f6f6f6"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text Color",
+      "default": "#333333"
+    },
+    {
+      "type": "color",
+      "id": "link_color",
+      "label": "Link Color",
+      "default": "#0066cc"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Simple Breadcrumbs"
+    }
+  ]
+}
+{% endschema %} 
