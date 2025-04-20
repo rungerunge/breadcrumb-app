@@ -3,7 +3,7 @@
   "name": "Smart Breadcrumbs",
   "target": "section",
   "stylesheet": "breadcrumbs.css",
-  "javascript": "breadcrumbs.js",
+  "javascript": "",
   "settings": [
     {
       "type": "header",
@@ -44,158 +44,21 @@
       "id": "separator",
       "label": "Breadcrumb Separator",
       "default": "›"
-    },
-    {
-      "type": "checkbox",
-      "id": "mobile_slider",
-      "label": "Enable horizontal slider on mobile",
-      "default": true
-    },
-    {
-      "type": "header",
-      "content": "Menu Settings"
-    },
-    {
-      "type": "text",
-      "id": "menu_handles",
-      "label": "Menu Handles (comma-separated, use * as wildcard)",
-      "default": "main-menu"
-    },
-    {
-      "type": "header",
-      "content": "Custom CSS"
-    },
-    {
-      "type": "textarea",
-      "id": "custom_css_desktop",
-      "label": "Custom CSS for Desktop/Tablet",
-      "default": "/* Add your desktop/tablet CSS here */"
-    },
-    {
-      "type": "textarea",
-      "id": "custom_css_mobile",
-      "label": "Custom CSS for Mobile",
-      "default": "/* Add your mobile CSS here */"
-    },
-    {
-      "type": "textarea",
-      "id": "custom_css_all",
-      "label": "Custom CSS for All Breadcrumbs",
-      "default": "/* Add your general breadcrumb CSS here */"
-    },
-    {
-      "type": "textarea",
-      "id": "custom_css_last",
-      "label": "Custom CSS for Last Breadcrumb",
-      "default": "/* Add your last breadcrumb CSS here */"
-    },
-    {
-      "type": "textarea",
-      "id": "custom_css_hover",
-      "label": "Custom CSS for Hover State",
-      "default": "/* Add your hover state CSS here */"
     }
   ]
 }
 {% endschema %}
 
-<div class="smart-breadcrumbs" 
-     data-mobile-slider="{{ block.settings.mobile_slider }}"
-     style="
-       --font-size: {{ block.settings.font_size }}px;
-       --margin-top: {{ block.settings.margin_top }}px;
-       --margin-bottom: {{ block.settings.margin_bottom }}px;
-     "
->
-  <nav class="breadcrumb-nav" role="navigation" aria-label="Breadcrumb">
-    <ol class="breadcrumb-list">
-      <li class="breadcrumb-item">
-        <a href="/" title="Home">Home</a>
-      </li>
-      {% if template contains 'collection' and collection %}
-        <li class="breadcrumb-separator">{{ block.settings.separator }}</li>
-        <li class="breadcrumb-item">
-          <a href="{{ collection.url }}" title="{{ collection.title }}">{{ collection.title }}</a>
-        </li>
-      {% endif %}
-      {% if template contains 'product' and product %}
-        <li class="breadcrumb-separator">{{ block.settings.separator }}</li>
-        <li class="breadcrumb-item current">
-          <span>{{ product.title }}</span>
-        </li>
-      {% endif %}
-    </ol>
-  </nav>
-</div>
+{% render 'smart-breadcrumbs' %}
 
 <style>
-  .smart-breadcrumbs {
-    margin-top: var(--margin-top);
-    margin-bottom: var(--margin-bottom);
-    font-size: var(--font-size);
+  .breadcrumb-container {
+    margin-top: {{ block.settings.margin_top }}px;
+    margin-bottom: {{ block.settings.margin_bottom }}px;
+    font-size: {{ block.settings.font_size }}px;
   }
 
-  .breadcrumb-nav {
-    width: 100%;
-    overflow: hidden;
-  }
-
-  .breadcrumb-list {
-    display: flex;
-    align-items: center;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .breadcrumb-item {
-    display: inline-flex;
-    align-items: center;
-    white-space: nowrap;
-  }
-
-  .breadcrumb-item a {
-    color: inherit;
-    text-decoration: none;
-  }
-
-  .breadcrumb-separator {
-    margin: 0 0.5em;
-    color: #666;
-  }
-
-  .breadcrumb-item.current {
-    font-weight: 600;
-  }
-
-  @media screen and (max-width: 768px) {
-    [data-mobile-slider="true"] .breadcrumb-nav {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-    }
-
-    [data-mobile-slider="true"] .breadcrumb-nav::-webkit-scrollbar {
-      display: none;
-    }
-  }
-
-  {{ block.settings.custom_css_all }}
-
-  @media screen and (min-width: 769px) {
-    {{ block.settings.custom_css_desktop }}
-  }
-
-  @media screen and (max-width: 768px) {
-    {{ block.settings.custom_css_mobile }}
-  }
-
-  .breadcrumb-item:last-child {
-    {{ block.settings.custom_css_last }}
-  }
-
-  .breadcrumb-item a:hover {
-    {{ block.settings.custom_css_hover }}
+  .breadcrumb-item:not(:last-child):after {
+    content: '{{ block.settings.separator }}';
   }
 </style> 

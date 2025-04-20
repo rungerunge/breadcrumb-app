@@ -1,0 +1,30 @@
+{% comment %}
+  Smart Breadcrumbs App Block
+  Version 2.1.0
+  
+  Pure server-side implementation with no JavaScript dependencies
+{% endcomment %}
+
+<div class="smart-breadcrumbs-app">
+  {% render 'smart-breadcrumbs' %}
+</div>
+
+{% schema %}
+{
+  "name": "Smart Breadcrumbs",
+  "target": "section",
+  "stylesheet": "breadcrumbs.css",
+  "javascript": "",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Simple breadcrumb navigation with no JavaScript dependencies."
+    }
+  ],
+  "presets": [
+    {
+      "name": "Smart Breadcrumbs"
+    }
+  ]
+}
+{% endschema %} 
