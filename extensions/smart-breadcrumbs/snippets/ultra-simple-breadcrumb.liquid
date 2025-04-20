@@ -1,0 +1,122 @@
+{% comment %}
+  Ultra Simple Breadcrumb v1.0
+  A minimal, no-frills breadcrumb implementation with guaranteed collection display
+{% endcomment %}
+
+<style>
+  .ultra-breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: 15px 0;
+    padding: 10px 15px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .ultra-breadcrumb a {
+    color: #555;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .ultra-breadcrumb a:hover {
+    color: #000;
+    text-decoration: underline;
+  }
+
+  .ultra-breadcrumb__separator {
+    margin: 0 10px;
+    color: #999;
+  }
+
+  .ultra-breadcrumb__current {
+    font-weight: 600;
+    color: #333;
+  }
+
+  @media (max-width: 767px) {
+    .ultra-breadcrumb {
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+    
+    .ultra-breadcrumb__separator {
+      margin: 0 8px;
+    }
+  }
+</style>
+
+<div class="ultra-breadcrumb">
+  <!-- Home link (always present) -->
+  <a href="/">Home</a>
+  <span class="ultra-breadcrumb__separator">/</span>
+  
+  {% if template contains 'product' %}
+    {% comment %}
+      For products, we need to ensure a collection link is present
+      First check current collection, then product collections, then use a default
+    {% endcomment %}
+    
+    {% assign show_collection = false %}
+    {% assign collection_url = "" %}
+    {% assign collection_title = "" %}
+    
+    {% comment %}Check for current collection context{% endcomment %}
+    {% if collection %}
+      {% assign show_collection = true %}
+      {% assign collection_url = collection.url %}
+      {% assign collection_title = collection.title %}
+    {% comment %}Otherwise, check if product has collections{% endcomment %}
+    {% elsif product.collections.size > 0 %}
+      {% assign show_collection = true %}
+      {% for collection in product.collections %}
+        {% if collection.handle != 'all' %}
+          {% assign collection_url = collection.url %}
+          {% assign collection_title = collection.title %}
+          {% break %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+    
+    {% comment %}If collection was found, show it{% endcomment %}
+    {% if show_collection %}
+      <a href="{{ collection_url }}">{{ collection_title }}</a>
+      <span class="ultra-breadcrumb__separator">/</span>
+    {% endif %}
+    
+    <!-- Product title (current page) -->
+    <span class="ultra-breadcrumb__current">{{ product.title }}</span>
+    
+  {% elsif template contains 'collection' %}
+    <!-- Collection title (current page) -->
+    <span class="ultra-breadcrumb__current">{{ collection.title }}</span>
+    
+  {% elsif template contains 'cart' %}
+    <!-- Cart page -->
+    <span class="ultra-breadcrumb__current">Cart</span>
+    
+  {% elsif template contains 'page' %}
+    <!-- Regular page -->
+    <span class="ultra-breadcrumb__current">{{ page.title }}</span>
+    
+  {% else %}
+    <!-- Default for other templates -->
+    <span class="ultra-breadcrumb__current">{{ page_title | default: template }}</span>
+  {% endif %}
+  
+  {% if request.path contains '?debug=true' %}
+    <div style="margin-top: 10px; padding: 5px; background: #eee; font-family: monospace; font-size: 11px;">
+      <div>Template: {{ template }}</div>
+      {% if product %}
+      <div>Product: {{ product.title }} ({{ product.handle }})</div>
+      <div>Collections: {% for collection in product.collections %}{{ collection.title }} ({{ collection.handle }}){% unless forloop.last %}, {% endunless %}{% endfor %}</div>
+      {% endif %}
+      {% if collection %}
+      <div>Collection: {{ collection.title }} ({{ collection.handle }})</div>
+      {% endif %}
+    </div>
+  {% endif %}
+</div> 

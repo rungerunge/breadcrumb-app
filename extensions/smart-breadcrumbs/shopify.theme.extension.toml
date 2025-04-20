@@ -189,6 +189,10 @@ handle = "smart-breadcrumbs"
 path = "snippets/smart-breadcrumbs.liquid"
 
 [[files]]
+handle = "ultra-simple-breadcrumb"
+path = "snippets/ultra-simple-breadcrumb.liquid"
+
+[[files]]
 handle = "smart-breadcrumbs-product"
 path = "snippets/smart-breadcrumbs-product.liquid"
 
@@ -208,6 +212,10 @@ path = "blocks/breadcrumbs.liquid"
 [[files]]
 handle = "app-block"
 path = "blocks/app-block.liquid"
+
+[[files]]
+handle = "ultra-simple"
+path = "blocks/ultra-simple.liquid"
 
 [[files]]
 handle = "script-disabler"
