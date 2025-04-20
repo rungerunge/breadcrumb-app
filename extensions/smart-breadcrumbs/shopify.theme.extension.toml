@@ -1,7 +1,17 @@
 name = "Smart Breadcrumbs"
-version = "5.1.0"
 type = "theme"
 handle = "smart-breadcrumbs"
+
+# These files will get uploaded to the Shopify CDN
+[[files]]
+handle = "breadcrumbs-override.js"
+path = "./assets/breadcrumbs-override.js"
+
+# This ensures all blocks are available
+[[extensions]]
+handle = "breadcrumbs"
+name = "Smart Breadcrumbs"
+type = "ui_extension"
 
 # Theme extension settings
 [[extensions]]

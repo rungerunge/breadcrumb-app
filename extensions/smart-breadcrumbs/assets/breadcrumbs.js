@@ -1,20 +1,23 @@
 /**
- * Smart Breadcrumbs - Empty Script
+ * Smart Breadcrumbs - Disabled JavaScript
  * 
- * This file is intentionally empty to disable any JavaScript functionality.
- * All breadcrumb functionality is now implemented server-side in Liquid templates.
+ * All JavaScript functionality has been disabled to prevent errors.
+ * The breadcrumb navigation now works purely with Liquid templates.
  * 
- * v2.1.0
+ * v5.0.0
  */
 
-// Smart Breadcrumbs v2.1.0
-document.addEventListener('DOMContentLoaded', function() {
-  // Initialize breadcrumbs
-  const breadcrumbs = document.querySelector('.smart-breadcrumb');
-  if (!breadcrumbs) return;
+// Intentionally empty to prevent errors
+console.log('Smart Breadcrumbs: JavaScript functionality disabled');
 
-  // Add any dynamic functionality here
-  // Currently, all functionality is handled through Liquid
-});
+// Override any existing functions to prevent errors
+window.SmartBreadcrumbs = {
+  fetchMenus: function() { return null; },
+  buildBreadcrumbs: function() { return null; },
+  init: function() { return null; }
+};
 
-// No code - intentionally empty 
+// Prevent any potential postMessage errors
+window.addEventListener('message', function(event) {
+  // Ignore all messages to prevent errors
+}, false); 
